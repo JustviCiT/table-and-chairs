@@ -1,37 +1,28 @@
 #include "TableAndChairsPlayerController.h"
-#include "LogArchviz.h"
-#include "Camera/CameraActor.h"
-
-
-ATableAndChairsPlayerController::ATableAndChairsPlayerController()
-{
-	this->bShowMouseCursor = true;
-
-	// Updating the drag and drop every 50ms is more than enough
-	SetActorTickInterval(0.05);
-}
 
 void ATableAndChairsPlayerController::ExitGame()
 {
 	FGenericPlatformMisc::RequestExit(false);
 }
 
-void ATableAndChairsPlayerController::BeginPlay()
+void ATableAndChairsPlayerController::SetupInputComponent()
 {
-	Super::BeginPlay();
+	Super::SetupInputComponent();
+
+	bShowMouseCursor = true;
+	SetActorTickInterval(0.05);
 
 	// Bind the functions for clicking with the cursor to edit the table
 	ensureMsgf(InputComponent != nullptr, TEXT("ATableAndChairsPlayerController can't bind mouse events because InputComponent is nullptr"));
 	InputComponent->BindAction("MouseLeftClicked", IE_Pressed, this, &ATableAndChairsPlayerController::LeftClickPressed);
 	InputComponent->BindAction("MouseLeftClicked", IE_Released, this, &ATableAndChairsPlayerController::LeftClickReleased);
 	InputComponent->BindAction("Escape", IE_Pressed, this, &ATableAndChairsPlayerController::ExitGame);
-
-	// High quality settings
-	GetWorld()->Exec(GetWorld(), TEXT("SCALABILITY 4"));
 }
+
 
 void ATableAndChairsPlayerController::LeftClickPressed()
 {
+	UE_LOG(LogTaC, Log, TEXT("Left Click Pressed"));
 	// Get the location of the cursor in world space
 	FVector Start;
 	FVector ForwardVector;
@@ -53,10 +44,10 @@ void ATableAndChairsPlayerController::LeftClickPressed()
 
 void ATableAndChairsPlayerController::LeftClickReleased()
 {
+	UE_LOG(LogTaC, Log, TEXT("Left Click released"));
 	TableBeingEdited = nullptr;
 	CurrentCornerDraggedComponent = nullptr;
 }
-
 
 void ATableAndChairsPlayerController::Tick(float DeltaTime)
 {

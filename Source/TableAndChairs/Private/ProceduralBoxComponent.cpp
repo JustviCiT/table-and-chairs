@@ -1,8 +1,8 @@
 #include "ProceduralBoxComponent.h"
-#include "ConstructorHelpers.h"
 
 
-UProceduralBoxComponent::UProceduralBoxComponent()
+UProceduralBoxComponent::UProceduralBoxComponent(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	bUseAsyncCooking = true; // Use PhysX multithreaded cooking
 }

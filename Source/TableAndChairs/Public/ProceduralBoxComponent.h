@@ -11,8 +11,7 @@ class TABLEANDCHAIRS_API UProceduralBoxComponent : public UProceduralMeshCompone
 	GENERATED_BODY()
 
 public:
-
-	UProceduralBoxComponent();
+	UProceduralBoxComponent(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION(BlueprintCallable, Category="Archviz")
 	void Build(const FVector Size, bool CollisionEnabled);

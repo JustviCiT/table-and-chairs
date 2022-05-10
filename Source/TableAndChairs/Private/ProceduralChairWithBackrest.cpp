@@ -1,26 +1,21 @@
 #include "ProceduralChairWithBackrest.h"
 
-#include "ConstructorHelpers.h"
-#include "ProceduralBoxComponent.h"
-
-#include "LogArchviz.h"
-
 AProceduralChair::AProceduralChair()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 
-	static ConstructorHelpers::FObjectFinder<UMaterial> MaterialChair(TEXT("Material'/Game/xoio_berlinflat/Materials/wood_chair.wood_chair'"));
-	if (MaterialChair.Succeeded())
-	{
-		Material = MaterialChair.Object;
-		UE_LOG(LogArchviz, Log, TEXT("Chair material loaded"));
-	}
-	else
-	{
-		UE_LOG(LogArchviz, Error, TEXT("Chair material loading error"));
-	}
+	//static ConstructorHelpers::FObjectFinder<UMaterial> MaterialChair(TEXT("Material'/Game/Materials/GenericMaterial.GenericMaterial'"));
+	//if (MaterialChair.Succeeded())
+	//{
+	//	Material = MaterialChair.Object;
+	//	UE_LOG(LogTaC, Log, TEXT("Chair material loaded"));
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTaC, Error, TEXT("Chair material loading error"));
+	//}
 
 	// Spawn the chair legs
 	TArray<FVector> LegsCorners = {

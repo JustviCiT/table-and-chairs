@@ -10,7 +10,7 @@ public class TableAndChairs : ModuleRules
         MinFilesUsingPrecompiledHeaderOverride = 1;
 
         //This will turn off the combining of source files
-        bFasterWithoutUnity = true;
+        bUseUnity = true;
 
         PublicDependencyModuleNames.AddRange(new string[] 
         {

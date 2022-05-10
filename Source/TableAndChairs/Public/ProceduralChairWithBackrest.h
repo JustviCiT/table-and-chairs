@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "ProceduralMeshComponent.h"
+#include "ProceduralBoxComponent.h"
+#include "LogTaC.h"
 #include "ProceduralChairWithBackrest.generated.h"
 
 UCLASS(Blueprintable)
@@ -12,7 +14,6 @@ class TABLEANDCHAIRS_API AProceduralChair : public AActor
 
 	
 public:	
-
 	AProceduralChair();
 
 	static constexpr float CHAIR_SQUARE_SIZE = 30;

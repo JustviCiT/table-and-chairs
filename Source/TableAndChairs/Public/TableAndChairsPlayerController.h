@@ -4,8 +4,9 @@
 #include "GameFramework/PlayerController.h"
 #include "ProceduralTableWithChairs.h"
 #include "DrawDebugHelpers.h"
+#include "LogTaC.h"
+#include "Camera/CameraActor.h"
 #include "TableAndChairsPlayerController.generated.h"
-
 
 /**
  *	Player controller managing the editing of procedural tables
@@ -26,17 +27,16 @@ private:
 
 	void LeftClickPressed();
 	void LeftClickReleased();
+
 	void ExitGame();
 
+protected:
+	virtual void SetupInputComponent() override;
 
 public:
-
-	ATableAndChairsPlayerController();
-
 	// The length of the ray to find an editable table
 	static constexpr float EDITING_RAY_LENGTH = 10000.0f;
 
-	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
 };

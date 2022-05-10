@@ -1,12 +1,9 @@
 #include "ProceduralTableWithChairs.h"
-#include "LogArchviz.h"
+
 
 #ifdef UE_BUILD_DEVELOPMENT
 #	include "Engine.h"
 #endif
-
-#include "ConstructorHelpers.h"
-
 
 const FVector2D ATableActor::DEFAULT_SIZE = FVector2D(100, 200);
 
@@ -35,11 +32,11 @@ ATableActor::ATableActor()
 	{
 		for (size_t i = 0; i < Corners.Num(); i++)
 			Corners[i]->SetBoxMaterial(MaterialTileAnchor.Object);
-		UE_LOG(LogArchviz, Log, TEXT("Resize anchor material loaded"));
+		UE_LOG(LogTaC, Log, TEXT("Resize anchor material loaded"));
 	}
 	else
 	{
-		UE_LOG(LogArchviz, Error, TEXT("Resize anchor material failed loading"));
+		UE_LOG(LogTaC, Error, TEXT("Resize anchor material failed loading"));
 	}
 
 
@@ -50,15 +47,15 @@ ATableActor::ATableActor()
 
 
 	// Load table material
-	static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/xoio_berlinflat/Materials/wood_chair.wood_chair'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Materials/GenericMaterial.GenericMaterial'"));
 	if (Material.Succeeded())
 	{
 		TableMaterial = Material.Object;
-		UE_LOG(LogArchviz, Log, TEXT("Table material loaded"));
+		UE_LOG(LogTaC, Log, TEXT("Table material loaded"));
 	}
 	else
 	{
-		UE_LOG(LogArchviz, Error, TEXT("Table material failed loading"));
+		UE_LOG(LogTaC, Error, TEXT("Table material failed loading"));
 	}
 
 	// Create countertop

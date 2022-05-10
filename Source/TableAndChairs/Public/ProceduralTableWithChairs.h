@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "ProceduralMeshComponent.h"
 #include "Materials/Material.h"
+#include "LogTaC.h"
 
 #include "ProceduralChairWithBackrest.h"
 #include "ProceduralBoxComponent.h"
@@ -17,6 +18,7 @@ class TABLEANDCHAIRS_API ATableActor : public AActor
 
 
 public:
+	ATableActor();
 
 	//UPROPERTY still does not support constexpr
 
@@ -68,8 +70,6 @@ protected:
 
 
 public:
-
-	ATableActor();
 
 	UFUNCTION(BlueprintCallable, Category = "Archviz")
 	bool SetCornerWorldLocation(UProceduralMeshComponent * Corner, const FVector NewWorldLocation);
