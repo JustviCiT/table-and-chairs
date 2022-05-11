@@ -5,7 +5,7 @@
 #	include "Engine.h"
 #endif
 
-const FVector2D ATableActor::DEFAULT_SIZE = FVector2D(100, 200);
+const FVector2D ATableActor::DEFAULT_SIZE = FVector2D(200, 200);
 
 ATableActor::ATableActor()
 {
@@ -21,6 +21,7 @@ ATableActor::ATableActor()
 		CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("XNegativeYNegative")),
 		CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("XPositiveYNegative"))
 	};
+
 	for (size_t i = 0; i < Corners.Num(); i++)
 	{
 		Corners[i]->SetupAttachment(RootComponent);
@@ -30,13 +31,25 @@ ATableActor::ATableActor()
 	static ConstructorHelpers::FObjectFinder<UMaterial> MaterialTileAnchor(TEXT("Material'/Game/Materials/M_TileAnchor.M_TileAnchor'"));
 	if (MaterialTileAnchor.Succeeded())
 	{
+		CornerMaterialEnabled = MaterialTileAnchor.Object;
 		for (size_t i = 0; i < Corners.Num(); i++)
-			Corners[i]->SetBoxMaterial(MaterialTileAnchor.Object);
-		UE_LOG(LogTaC, Log, TEXT("Resize anchor material loaded"));
+			Corners[i]->SetBoxMaterial(CornerMaterialEnabled);
+		UE_LOG(LogTaC, Log, TEXT("Resize anchor material enabled loaded"));
 	}
 	else
 	{
-		UE_LOG(LogTaC, Error, TEXT("Resize anchor material failed loading"));
+		UE_LOG(LogTaC, Error, TEXT("Resize anchor material enabled failed loading"));
+	}
+
+	static ConstructorHelpers::FObjectFinder<UMaterial> MaterialTileAnchorSelected(TEXT("Material'/Game/Materials/M_TileAnchorSelected.M_TileAnchorSelected'"));
+	if (MaterialTileAnchorSelected.Succeeded())
+	{
+		CornerMaterialSelected = MaterialTileAnchorSelected.Object;
+		UE_LOG(LogTaC, Log, TEXT("Resize anchor material selected loaded"));
+	}
+	else
+	{
+		UE_LOG(LogTaC, Error, TEXT("Resize anchor material selected failed loading"));
 	}
 
 
@@ -79,23 +92,26 @@ ATableActor::ATableActor()
 
 bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, const FVector NewCornerWorldLocation)
 {
-	if (Corner == nullptr)
+	if (Corner == nullptr) 
 		return false;
 
 	const FVector OldLocation = Corner->GetComponentLocation();
-	const UProceduralMeshComponent* OppositeCorner = GetOppositeCorner(Corner);
-	const FVector OldSign = (Corner->GetRelativeTransform().GetLocation() - OppositeCorner->GetRelativeTransform().GetLocation()).GetSignVector();
-
-
+	UE_LOG(LogTaC, Log, TEXT("Old Location %s"), *OldLocation.ToString());
+	//const UProceduralMeshComponent* OppositeCorner = GetOppositeCorner(Corner);
+	const FVector OppositeLocation = GetOppositeCorner(Corner)->GetComponentLocation();
+	//const FVector OldSign = (OldLocation - OppositeCorner->GetRelativeTransform().GetLocation()).GetSignVector();
+	const FVector OldSign = (OldLocation - OppositeLocation).GetSignVector();
+	UE_LOG(LogTaC, Log, TEXT("Old Sign %s"), *OldSign.ToString());
 	// The current corner location is where the mouse ray hits the table plane
 	Corner->SetWorldLocation(NewCornerWorldLocation);
 
 	// The nearby corners location depends if they are the clockwise/counterclockwise corners and in which sector of the table they are
 	UProceduralMeshComponent* ClockwiseCorner = GetClockwiseCorner(Corner);
-	ensureMsgf(ClockwiseCorner != GetOppositeCorner(Corner), TEXT("A clockwise corner can't be the opposite corner"));
+	//ensureMsgf(ClockwiseCorner != OppositeCorner, TEXT("A clockwise corner can't be the opposite corner"));
 	UProceduralMeshComponent* CounterClockwiseCorner = GetCounterClockwiseCorner(Corner);
-	ensureMsgf(CounterClockwiseCorner != GetOppositeCorner(Corner), TEXT("A counterclockwise corner can't be the opposite corner"));
-	const FVector NewSign = (Corner->GetRelativeTransform().GetLocation() - OppositeCorner->GetRelativeTransform().GetLocation()).GetSignVector();
+	//ensureMsgf(CounterClockwiseCorner != OppositeCorner, TEXT("A counterclockwise corner can't be the opposite corner"));
+	const FVector NewSign = (Corner->GetRelativeTransform().GetLocation() - OppositeLocation).GetSignVector();
+	UE_LOG(LogTaC, Log, TEXT("New Sign %s"), *NewSign.ToString());
 
 	// HACK: fix this ugly switch
 	// If a corner is in a quadrant in which both coordinates have the same sign it should assign the Y on the clockwise corner and the X on the counterclockwise corner
@@ -103,7 +119,9 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 	UProceduralMeshComponent* Corner1;
 	UProceduralMeshComponent* Corner2;
 
-	auto CornerIndex = Corners.IndexOfByKey(Corner);
+	int CornerIndex = Corners.IndexOfByKey(Corner);
+	if (CornerIndex == INDEX_NONE)
+		return false;
 
 	switch (CornerIndex)
 	{
@@ -173,50 +191,54 @@ TArray<UProceduralBoxComponent*> ATableActor::GetCorners() const
 	return Corners;
 }
 
+void ATableActor::SetCornerSelected(const UProceduralMeshComponent* CurrentCorner)
+{
+	int index = Corners.IndexOfByKey(CurrentCorner);
+	if (index == INDEX_NONE) {
+		UE_LOG(LogTaC, Error, TEXT("CurrentCorner index is oob"));
+		return;
+	}
+
+	Corners[index]->SetBoxMaterial(CornerMaterialSelected);
+}
+
+void ATableActor::SetCornerEnabled(const UProceduralMeshComponent* CurrentCorner)
+{
+	int index = Corners.IndexOfByKey(CurrentCorner);
+	if (index == INDEX_NONE) {
+		UE_LOG(LogTaC, Error, TEXT("CurrentCorner index is oob"));
+		return;
+	}
+
+	Corners[index]->SetBoxMaterial(CornerMaterialEnabled);
+}
+
 
 UProceduralMeshComponent * ATableActor::GetOppositeCorner(const UProceduralMeshComponent * CurrentCorner) const
 {
 	// HACK: fix this with a lookup table maybe
 	int index = Corners.IndexOfByKey(CurrentCorner);
-
-	switch (index)
-	{
-		case 0:  return Corners[2];
-		case 1:  return Corners[3];
-		case 2:  return Corners[0];
-		case 3:  return Corners[1];
-		default: return nullptr;
-	}
+	if (index == INDEX_NONE)
+		return nullptr;
+	return Corners[(index+2) % 4];
 }
 
 UProceduralMeshComponent* ATableActor::GetClockwiseCorner(const UProceduralMeshComponent* CurrentCorner) const
 {
-	// HACK: fix this with a lookup table maybe
 	int index = Corners.IndexOfByKey(CurrentCorner);
-	//return Corners[(index+1) % 4];
-	switch (index)
-	{
-		case 0:  return Corners[1];
-		case 1:  return Corners[2];
-		case 2:  return Corners[3];
-		case 3:  return Corners[0];
-		default: return nullptr;
-	}
+	if (index == INDEX_NONE)
+		return nullptr;
+
+	return Corners[(index+1) % 4];
 }
 
 UProceduralMeshComponent* ATableActor::GetCounterClockwiseCorner(const UProceduralMeshComponent* CurrentCorner) const
 {
-	// HACK: fix this with a lookup table maybe
 	int index = Corners.IndexOfByKey(CurrentCorner);
-	//return Corners[(index+1) % 4];
-	switch (index)
-	{
-		case 0:  return Corners[3];
-		case 1:  return Corners[0];
-		case 2:  return Corners[1];
-		case 3:  return Corners[2];
-		default: return nullptr;
-	}
+	if (index == INDEX_NONE)
+		return nullptr;
+
+	return Corners[(index+3) % 4];
 }
 
 void ATableActor::RefreshLocations()

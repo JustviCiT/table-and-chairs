@@ -23,11 +23,14 @@ void ATableAndChairsPlayerController::SetupInputComponent()
 void ATableAndChairsPlayerController::LeftClickPressed()
 {
 	UE_LOG(LogTaC, Log, TEXT("Left Click Pressed"));
-	// Get the location of the cursor in world space
+
 	FVector Start;
 	FVector ForwardVector;
 	bool flag = DeprojectMousePositionToWorld(Start, ForwardVector);
+	UE_LOG(LogTaC, Log, TEXT("START %s"), *Start.ToString());
+	UE_LOG(LogTaC, Log, TEXT("FORWARD VECTOR %s"), *ForwardVector.ToString());
 	if (!flag) return;
+
 	FVector End = ((ForwardVector * EDITING_RAY_LENGTH) + Start);
 
 	// Spawn a ray from the cursor to "infinity" to find an editable table
@@ -37,14 +40,24 @@ void ATableAndChairsPlayerController::LeftClickPressed()
 		OutHit.bBlockingHit &&
 		OutHit.GetActor()->GetClass() == ATableActor::StaticClass())
 	{
+		UE_LOG(LogTaC, Log, TEXT("this condition is true"));
 		TableBeingEdited = (ATableActor*)OutHit.GetActor();
-		CurrentCornerDraggedComponent = static_cast<UProceduralMeshComponent*>(OutHit.GetComponent());
+		CurrentCornerDraggedComponent = StaticCast<UProceduralMeshComponent*>(OutHit.GetComponent());
+
+		TableBeingEdited->SetCornerSelected(CurrentCornerDraggedComponent);
 	}
 }
 
 void ATableAndChairsPlayerController::LeftClickReleased()
 {
 	UE_LOG(LogTaC, Log, TEXT("Left Click released"));
+
+	if (TableBeingEdited == nullptr || CurrentCornerDraggedComponent == nullptr) {
+		//TODO REMOVE table
+	} else {
+		TableBeingEdited->SetCornerEnabled(CurrentCornerDraggedComponent);
+	}
+
 	TableBeingEdited = nullptr;
 	CurrentCornerDraggedComponent = nullptr;
 }
@@ -60,7 +73,9 @@ void ATableAndChairsPlayerController::Tick(float DeltaTime)
 	FVector Start;
 	FVector ForwardVector;
 	bool flag = DeprojectMousePositionToWorld(Start, ForwardVector);
-	FVector End = ((ForwardVector * 10000.f) + Start);
+	if (!flag) return;
+
+	FVector End = ((ForwardVector * EDITING_RAY_LENGTH) + Start);
 	FVector NewCornerWorldLocation = FMath::LinePlaneIntersection(Start, End, CurrentCornerDraggedComponent->GetComponentLocation(), FVector::UpVector);
 
 	TableBeingEdited->SetCornerWorldLocation(CurrentCornerDraggedComponent, NewCornerWorldLocation);

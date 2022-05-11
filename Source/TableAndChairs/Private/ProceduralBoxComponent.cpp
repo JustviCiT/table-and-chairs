@@ -86,9 +86,6 @@ void UProceduralBoxComponent::Build(const FVector Size, bool CollisionEnabled, c
 	triangles = { 0, 1, 2, 1, 3, 2 };
 	normals = { FVector::RightVector, FVector::RightVector, FVector::RightVector , FVector::RightVector };
 	CreateMeshSection_LinearColor(5, vertices, triangles, normals, UV0, LinearColors, MeshTangents, CollisionEnabled);
-
-	//Box->SetupAttachment(RootComponent);
-	//return Box;
 }
 
 void UProceduralBoxComponent::SetBoxMaterial(const UMaterialInterface * const NewMaterial)

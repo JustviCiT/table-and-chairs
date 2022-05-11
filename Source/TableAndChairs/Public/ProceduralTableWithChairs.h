@@ -71,7 +71,7 @@ protected:
 
 public:
 
-	UFUNCTION(BlueprintCallable, Category = "Archviz")
+	UFUNCTION(BlueprintCallable, Category = "TaC")
 	bool SetCornerWorldLocation(UProceduralMeshComponent * Corner, const FVector NewWorldLocation);
 
 	/**
@@ -80,21 +80,21 @@ public:
 	@Param CurrentCorner the input corner
 	@Return opposite corner or null if CurrentCorner is not a table corner or is null
 	*/
-	UFUNCTION(BlueprintPure, Category = "Archviz")
-	UProceduralMeshComponent * GetOppositeCorner(const UProceduralMeshComponent * CurrentCorner) const;
+	UFUNCTION(BlueprintPure, Category = "TaC")
+	UProceduralMeshComponent * GetOppositeCorner(const UProceduralMeshComponent* CurrentCorner) const;
 
 	/**
 	The size of the table
 
 	@Return table size as FVector2D
 	*/
-	UFUNCTION(BlueprintPure, Category = "Archviz")
+	UFUNCTION(BlueprintPure, Category = "TaC")
 	FVector2D GetTableSize() const;
 
 	/**
 	Returns the total table height: legs + countertop
 	*/
-	UFUNCTION(BlueprintPure, Category = "Archviz")
+	UFUNCTION(BlueprintPure, Category = "TaC")
 	float GetTableHeight() const;
 
 	/**
@@ -103,8 +103,16 @@ public:
 
 	X+ Y+, X- Y+, X- Y-, X+ Y-
 	*/
-	UFUNCTION(BlueprintPure, Category = "Archviz")
+	UFUNCTION(BlueprintPure, Category = "TaC")
 	TArray<UProceduralBoxComponent*> GetCorners() const;
+
+
+	/**
+	* Changes the texture of a single corner from selected to enabled
+	* @Param CurrentCorner input corner
+	*/
+	void SetCornerSelected(const UProceduralMeshComponent* CurrentCorner);
+	void SetCornerEnabled(const UProceduralMeshComponent* CurrentCorner);
 
 	/**
 	Returns the clockwise corner given a corner
@@ -112,8 +120,8 @@ public:
 	@Param CurrentCorner the input corner
 	@Return clockwise corner or null if CurrentCorner is not a table corner or is null
 	*/
-	UFUNCTION(BlueprintPure, Category = "Archviz")
-	UProceduralMeshComponent* GetClockwiseCorner(const UProceduralMeshComponent * const CurrentCorner) const;
+	UFUNCTION(BlueprintPure, Category = "TaC")
+	UProceduralMeshComponent* GetClockwiseCorner(const UProceduralMeshComponent* const CurrentCorner) const;
 
 	/**
 	Returns the counterclockwise corner given a corner
@@ -121,18 +129,30 @@ public:
 	@Param CurrentCorner the input corner
 	@Return counterclockwise corner or null if CurrentCorner is not a table corner or is null
 	*/
-	UFUNCTION(BlueprintPure, Category = "Archviz")
+	UFUNCTION(BlueprintPure, Category = "TaC")
 	UProceduralMeshComponent* GetCounterClockwiseCorner(const UProceduralMeshComponent* const CurrentCorner) const;
 
 	/**
 	Call this after editing one of the 4 corners locations to refresh vertexes locations
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Archviz")
+	UFUNCTION(BlueprintCallable, Category = "TaC")
 	void RefreshLocations();
 
 	/**
 	The material applied to the entire table, set in the constructor, read only
 	*/
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Archviz")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "TaC")
 	UMaterial* TableMaterial;
+
+	/**
+	The material applied to the corner when it's not selected, set in the constructor, read only
+	*/
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "TaC")
+	UMaterial* CornerMaterialEnabled;
+
+	/**
+	The material applied to the corner when it's selected, set in the constructor, read only
+	*/
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "TaC")
+	UMaterial* CornerMaterialSelected;
 };

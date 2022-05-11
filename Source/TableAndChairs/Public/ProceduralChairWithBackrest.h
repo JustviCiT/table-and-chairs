@@ -28,9 +28,9 @@ public:
 
 public:	
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Archviz")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="TaC")
 	UProceduralMeshComponent* ChairMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Archviz")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "TaC")
 	UMaterial* Material;
 };

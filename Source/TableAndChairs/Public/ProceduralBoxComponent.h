@@ -13,7 +13,7 @@ class TABLEANDCHAIRS_API UProceduralBoxComponent : public UProceduralMeshCompone
 public:
 	UProceduralBoxComponent(const FObjectInitializer& ObjectInitializer);
 
-	UFUNCTION(BlueprintCallable, Category="Archviz")
+	UFUNCTION(BlueprintCallable, Category="TaC")
 	void Build(const FVector Size, bool CollisionEnabled);
 	
 	void Build(const FVector Size, bool CollisionEnabled, const TArray<FLinearColor> LinearColors, const TArray<FProcMeshTangent> MeshTangents);
@@ -21,6 +21,6 @@ public:
 	/**
 	Sets the specified material to all box faces
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Archviz")
+	UFUNCTION(BlueprintCallable, Category = "TaC")
 	void SetBoxMaterial(const UMaterialInterface* const NewMaterial);
 };
