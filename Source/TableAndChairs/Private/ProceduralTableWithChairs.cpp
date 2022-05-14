@@ -5,7 +5,15 @@
 #	include "Engine.h"
 #endif
 
-const FVector2D ATableActor::DEFAULT_SIZE = FVector2D(200, 200);
+
+const float		ATableActor::ANCHOR_SIZE = 25;
+const float		ATableActor::ANCHOR_HOVER_DISTANCE = 2;
+const float		ATableActor::DISTANCE_BETWEEN_CHAIRS = 50;
+const float		ATableActor::CHAIRS_DISTANCE_FROM_TABLE = 25;
+const float		ATableActor::CHAIRS_INTERVAL = (AProceduralChair::CHAIR_SQUARE_SIZE + DISTANCE_BETWEEN_CHAIRS);
+const float		ATableActor::TABLE_MIN_SIZE = (AProceduralChair::CHAIR_SQUARE_SIZE + DISTANCE_BETWEEN_CHAIRS * 2);
+const int		ATableActor::MAX_CHAIRS = 100;
+const float		ATableActor::TABLE_MAX_SIZE = TABLE_MIN_SIZE * MAX_CHAIRS - DISTANCE_BETWEEN_CHAIRS * (MAX_CHAIRS - 1);
 
 ATableActor::ATableActor()
 {
@@ -13,6 +21,11 @@ ATableActor::ATableActor()
 	PrimaryActorTick.bCanEverTick = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
+
+	Table = CreateDefaultSubobject<AProceduralTable>(TEXT("Table"));
+	//FActorSpawnParameters SpawnInfo;
+	//SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	//Table = GetWorld()->SpawnActor<AProceduralTable>(SpawnedTable, this->GetActorLocation(), this->GetActorRotation(), SpawnInfo);
 
 	// Create resizable corners
 	Corners = {
@@ -53,41 +66,11 @@ ATableActor::ATableActor()
 	}
 
 
-	Corners[0]->SetRelativeLocation(FVector( TableSize.X / 2,  TableSize.Y / 2, LEG_LENGTH + TABLE_TOP_THICKNESS + ANCHOR_HOVER_DISTANCE));
-	Corners[1]->SetRelativeLocation(FVector(-TableSize.X / 2,  TableSize.Y / 2, LEG_LENGTH + TABLE_TOP_THICKNESS + ANCHOR_HOVER_DISTANCE));
-	Corners[2]->SetRelativeLocation(FVector(-TableSize.X / 2, -TableSize.Y / 2, LEG_LENGTH + TABLE_TOP_THICKNESS + ANCHOR_HOVER_DISTANCE));
-	Corners[3]->SetRelativeLocation(FVector( TableSize.X / 2, -TableSize.Y / 2, LEG_LENGTH + TABLE_TOP_THICKNESS + ANCHOR_HOVER_DISTANCE));
+	Corners[0]->SetRelativeLocation(FVector( Table->GetTableSize().X / 2,  Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
+	Corners[1]->SetRelativeLocation(FVector(-Table->GetTableSize().X / 2,  Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
+	Corners[2]->SetRelativeLocation(FVector(-Table->GetTableSize().X / 2, -Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
+	Corners[3]->SetRelativeLocation(FVector( Table->GetTableSize().X / 2, -Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
 
-
-	// Load table material
-	static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Materials/GenericMaterial.GenericMaterial'"));
-	if (Material.Succeeded())
-	{
-		TableMaterial = Material.Object;
-		UE_LOG(LogTaC, Log, TEXT("Table material loaded"));
-	}
-	else
-	{
-		UE_LOG(LogTaC, Error, TEXT("Table material failed loading"));
-	}
-
-	// Create countertop
-	CounterTop = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("Countertop"));
-	CounterTop->SetupAttachment(RootComponent);
-	CounterTop->Build(FVector(TableSize, TABLE_TOP_THICKNESS), false);
-	CounterTop->SetBoxMaterial(TableMaterial);
-
-	// Create legs
-	for (size_t i = 0; i < Corners.Num(); i++)
-	{
-		const FString LegName = "Leg" + FString::FromInt(i);
-		auto LegComp = CreateDefaultSubobject<UProceduralBoxComponent>(*LegName);
-		LegComp->Build(FVector(LEG_SIDE_SIZE, LEG_SIDE_SIZE, LEG_LENGTH), false);
-		LegComp->SetupAttachment(RootComponent);
-		LegComp->SetRelativeLocation(FVector::ZeroVector);
-		LegComp->SetBoxMaterial(TableMaterial);
-		Legs.Add(LegComp);
-	}
 }
 
 bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, const FVector NewCornerWorldLocation)
@@ -96,22 +79,23 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 		return false;
 
 	const FVector OldLocation = Corner->GetComponentLocation();
-	UE_LOG(LogTaC, Log, TEXT("Old Location %s"), *OldLocation.ToString());
-	//const UProceduralMeshComponent* OppositeCorner = GetOppositeCorner(Corner);
-	const FVector OppositeLocation = GetOppositeCorner(Corner)->GetComponentLocation();
-	//const FVector OldSign = (OldLocation - OppositeCorner->GetRelativeTransform().GetLocation()).GetSignVector();
-	const FVector OldSign = (OldLocation - OppositeLocation).GetSignVector();
-	UE_LOG(LogTaC, Log, TEXT("Old Sign %s"), *OldSign.ToString());
-	// The current corner location is where the mouse ray hits the table plane
+	//UE_LOG(LogTaC, Log, TEXT("Old Location %s"), *OldLocation.ToString());
+	////const UProceduralMeshComponent* OppositeCorner = GetOppositeCorner(Corner);
+	//const FVector OppositeLocation = GetOppositeCorner(Corner)->GetRelativeLocation();
+	////const FVector OldSign = (OldLocation - OppositeCorner->GetRelativeTransform().GetLocation()).GetSignVector();
+	//const FVector OldSign = (OldLocation - OppositeLocation).GetSignVector();
+	//UE_LOG(LogTaC, Log, TEXT("Old Sign %s"), *OldSign.ToString());
+	// 
+	//// The current corner location is where the mouse ray hits the table plane
 	Corner->SetWorldLocation(NewCornerWorldLocation);
 
-	// The nearby corners location depends if they are the clockwise/counterclockwise corners and in which sector of the table they are
+	//// The nearby corners location depends if they are the clockwise/counterclockwise corners and in which sector of the table they are
 	UProceduralMeshComponent* ClockwiseCorner = GetClockwiseCorner(Corner);
-	//ensureMsgf(ClockwiseCorner != OppositeCorner, TEXT("A clockwise corner can't be the opposite corner"));
+	////ensureMsgf(ClockwiseCorner != OppositeCorner, TEXT("A clockwise corner can't be the opposite corner"));
 	UProceduralMeshComponent* CounterClockwiseCorner = GetCounterClockwiseCorner(Corner);
 	//ensureMsgf(CounterClockwiseCorner != OppositeCorner, TEXT("A counterclockwise corner can't be the opposite corner"));
-	const FVector NewSign = (Corner->GetRelativeTransform().GetLocation() - OppositeLocation).GetSignVector();
-	UE_LOG(LogTaC, Log, TEXT("New Sign %s"), *NewSign.ToString());
+	//const FVector NewSign = (Corner->GetRelativeLocation() - OppositeLocation).GetSignVector();
+	//UE_LOG(LogTaC, Log, TEXT("New Sign %s"), *NewSign.ToString());
 
 	// HACK: fix this ugly switch
 	// If a corner is in a quadrant in which both coordinates have the same sign it should assign the Y on the clockwise corner and the X on the counterclockwise corner
@@ -136,21 +120,24 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 		Corner2 = ClockwiseCorner;
 		break;
 	default:
-		Corner1 = nullptr;
-		Corner2 = nullptr;
+		checkNoEntry();
+		return false;
 	}
-	const auto Corner1OldLoc = Corner1->GetComponentLocation();
-	const auto Corner2OldLoc = Corner2->GetComponentLocation();
-	Corner1->SetWorldLocation(FVector(Corner1->GetComponentLocation().X, NewCornerWorldLocation.Y, Corner1->GetComponentLocation().Z));
-	Corner2->SetWorldLocation(FVector(NewCornerWorldLocation.X, Corner2->GetComponentLocation().Y, Corner2->GetComponentLocation().Z));
+	const FVector Corner1OldLoc = Corner1->GetComponentLocation();
+	const FVector Corner2OldLoc = Corner2->GetComponentLocation();
+
+	Corner1->SetWorldLocation(FVector(Corner1OldLoc.X, NewCornerWorldLocation.Y, Corner1OldLoc.Z));
+	Corner2->SetWorldLocation(FVector(NewCornerWorldLocation.X, Corner2OldLoc.Y, Corner2OldLoc.Z));
+
+	const float DistanceClockwise = FVector::Distance(NewCornerWorldLocation, ClockwiseCorner->GetComponentLocation());
+	const float DistanceCounterClockwise = FVector::Distance(NewCornerWorldLocation, CounterClockwiseCorner->GetComponentLocation());
 
 	// Minimum table area check
-	// if corner in other relative sector or distance with relative (0,0) too small abort the resize
-	if (FVector::Distance(NewCornerWorldLocation, ClockwiseCorner->GetComponentLocation()) < ATableActor::TABLE_MIN_SIZE ||
-		FVector::Distance(NewCornerWorldLocation, CounterClockwiseCorner->GetComponentLocation()) < ATableActor::TABLE_MIN_SIZE ||
-		FVector::Distance(NewCornerWorldLocation, ClockwiseCorner->GetComponentLocation()) > ATableActor::TABLE_MAX_SIZE ||
-		FVector::Distance(NewCornerWorldLocation, CounterClockwiseCorner->GetComponentLocation()) > ATableActor::TABLE_MAX_SIZE ||
-		OldSign != NewSign
+	if (DistanceClockwise < ATableActor::TABLE_MIN_SIZE ||
+		DistanceCounterClockwise < ATableActor::TABLE_MIN_SIZE ||
+		DistanceClockwise > ATableActor::TABLE_MAX_SIZE ||
+		DistanceCounterClockwise > ATableActor::TABLE_MAX_SIZE
+		//OldSign != NewSign
 		)
 	{
 		Corner->SetWorldLocation(OldLocation);
@@ -158,7 +145,6 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 		Corner2->SetWorldLocation(Corner2OldLoc);
 		return false;
 	}
-	// TODO: support table rotations
 
 	// Update the table vertexes
 	RefreshLocations();
@@ -167,24 +153,11 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 }
 
 
-FVector2D ATableActor::GetTableSize() const
-{
-	return TableSize;
-}
-
-
 void ATableActor::OnConstruction(const FTransform & Transform)
 {
 	Super::OnConstruction(Transform);
 	RefreshLocations();
 }
-
-
-float ATableActor::GetTableHeight() const
-{
-	return LEG_LENGTH + TABLE_TOP_THICKNESS;
-}
-
 
 TArray<UProceduralBoxComponent*> ATableActor::GetCorners() const
 {
@@ -244,54 +217,37 @@ UProceduralMeshComponent* ATableActor::GetCounterClockwiseCorner(const UProcedur
 void ATableActor::RefreshLocations()
 {
 	// Cache table size
-	TableSize = FVector2D(
+	FVector2D TmpTableSize = FVector2D(
 		FVector::Distance(Corners[0]->GetComponentLocation(), Corners[1]->GetComponentLocation()),
 		FVector::Distance(Corners[0]->GetComponentLocation(), Corners[3]->GetComponentLocation())
 	);
+	Table->SetTableSize(TmpTableSize);
 
-	
 
 	// HACK: fix root location
-	FVector NewRelativeRoot = FVector(
-		Corners[0]->GetRelativeTransform().GetLocation().X - TableSize.X / 2,
-		Corners[0]->GetRelativeTransform().GetLocation().Y - TableSize.Y / 2,
-		0
-	);
-	FVector NewWorldRoot = this->GetTransform().TransformPosition(NewRelativeRoot);
+	//FVector NewRelativeRoot = FVector(
+	//	Corners[0]->GetRelativeLocation().X - Table->GetTableSize().X / 2,
+	//	Corners[0]->GetRelativeLocation().Y - Table->GetTableSize().Y / 2,
+	//	0
+	//);
+	//FVector NewWorldRoot = this->GetTransform().TransformPosition(NewRelativeRoot);
 
-	// Refresh countertop geometry
-	CounterTop->Build(FVector(TableSize, TABLE_TOP_THICKNESS), false);
-	CounterTop->SetWorldLocation(NewWorldRoot+FVector(0,0, LEG_LENGTH  + TABLE_TOP_THICKNESS/2));
 
-	// Refresh legs location
-	const TArray<FVector> LegsOffsets = {
-	{-LEG_SIDE_SIZE / 2, -LEG_SIDE_SIZE / 2, -LEG_LENGTH / 2 - ANCHOR_HOVER_DISTANCE - TABLE_TOP_THICKNESS},
-	{ LEG_SIDE_SIZE / 2, -LEG_SIDE_SIZE / 2, -LEG_LENGTH / 2 - ANCHOR_HOVER_DISTANCE - TABLE_TOP_THICKNESS},
-	{LEG_SIDE_SIZE / 2, LEG_SIDE_SIZE / 2, -LEG_LENGTH / 2 - ANCHOR_HOVER_DISTANCE - TABLE_TOP_THICKNESS},
-	{-LEG_SIDE_SIZE / 2, LEG_SIDE_SIZE / 2, -LEG_LENGTH / 2 - ANCHOR_HOVER_DISTANCE - TABLE_TOP_THICKNESS} };
-	for (size_t i = 0; i < 4; i++)
-		Legs[i]->SetRelativeLocation(Corners[i]->GetRelativeTransform().GetLocation() + LegsOffsets[i]);
 
 	// Remove old chairs
+	// TODO instead of removing all add the missing one 
 	TArray<AActor*> SpawnedChairs;
 	this->GetAllChildActors(SpawnedChairs);
 	for (size_t i = 0; i < SpawnedChairs.Num(); i++)
 		SpawnedChairs[i]->Destroy();
 
-	// Spawn necessary chairs
-	constexpr float CHAIRS_DISTANCE_FROM_TABLE = 25;
-	constexpr float DISTANCE_BETWEEN_CHAIRS = 50;
-	constexpr float CHAIRS_INTERVAL = (AProceduralChair::CHAIR_SQUARE_SIZE + DISTANCE_BETWEEN_CHAIRS);
-
-	
-
-	int ChairsToSpawnOnYSide = TableSize.Y / CHAIRS_INTERVAL;
-	int ChairsToSpawnOnXSide = TableSize.X / CHAIRS_INTERVAL;
+	int ChairsToSpawnOnYSide = Table->GetTableSize().Y / CHAIRS_INTERVAL;
+	int ChairsToSpawnOnXSide = Table->GetTableSize().X / CHAIRS_INTERVAL;
 
 	// The offset to add so the chairs line is centered
 	// Remaining space / 2
 	const float CHAIRS_YLINE_LENGTH = ChairsToSpawnOnYSide * AProceduralChair::CHAIR_SQUARE_SIZE + (ChairsToSpawnOnYSide-1)*DISTANCE_BETWEEN_CHAIRS;
-	const float YChairsSpawnOffset = (TableSize.Y - CHAIRS_YLINE_LENGTH ) / 2;
+	const float YChairsSpawnOffset = (Table->GetTableSize().Y - CHAIRS_YLINE_LENGTH ) / 2;
 	
 
 	// Backward side
@@ -323,7 +279,7 @@ void ATableActor::RefreshLocations()
 	}
 
 	const float CHAIRS_XLINE_LENGTH = ChairsToSpawnOnXSide * AProceduralChair::CHAIR_SQUARE_SIZE + (ChairsToSpawnOnXSide - 1)*DISTANCE_BETWEEN_CHAIRS;
-	const float XChairsSpawnOffset = (TableSize.X - CHAIRS_XLINE_LENGTH) / 2;
+	const float XChairsSpawnOffset = (Table->GetTableSize().X - CHAIRS_XLINE_LENGTH) / 2;
 
 	// Left side
 	FVector ChairsLeftSpawnPoint = Corners[2]->GetComponentLocation();

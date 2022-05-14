@@ -10,45 +10,54 @@ UProceduralBoxComponent::UProceduralBoxComponent(const FObjectInitializer& Objec
 
 void UProceduralBoxComponent::Build(const FVector Size, bool CollisionEnabled)
 {
-	Build(Size, CollisionEnabled, TArray<FLinearColor>(), TArray<FProcMeshTangent>());
+	Build(Size, TArray<FLinearColor>(), TArray<FProcMeshTangent>(), CollisionEnabled);
 }
 
-void UProceduralBoxComponent::Build(const FVector Size, bool CollisionEnabled, const TArray<FLinearColor> LinearColors, const TArray<FProcMeshTangent> MeshTangents)
+void UProceduralBoxComponent::Build(const FVector Size, const TArray<FLinearColor> LinearColors, const TArray<FProcMeshTangent> MeshTangents, bool CollisionEnabled )
 {
 	ensureAlwaysMsgf(!Size.IsZero(), TEXT("Size can't be zero"));
 	ensureAlwaysMsgf(Size.X > 0 && Size.Y > 0, TEXT("Size can't be negative"));
 
 	TArray<FVector2D> UV0 = { { 0, 0 } , { 1, 0 }, { 0, 1 }, { 1, 1 } };
 
+	const float tmpX = Size.X * 0.5f;
+	const float tmpY = Size.Y * 0.5f;
+	const float tmpZ = Size.Z * 0.5f;
+
 	// Top
+	// Vertices are clockwise
 	TArray<FVector> vertices = {
-		{-Size.X / 2, -Size.Y / 2, Size.Z / 2 },
-		{-Size.X / 2,  Size.Y / 2, Size.Z / 2 },
-		{ Size.X / 2, -Size.Y / 2, Size.Z / 2 },
-		{ Size.X / 2,  Size.Y / 2, Size.Z / 2 }
+		{-tmpX, -tmpY, tmpZ },
+		{ tmpX, -tmpY, tmpZ },
+		{ tmpX,  tmpY, tmpZ },
+		{ -tmpX,  tmpY, tmpZ }
 	};
-	TArray<int32> triangles = { 2, 0, 1, 1, 3, 2 };
+
+	// Triangles are counterclockwise
+	TArray<int32> triangles = { 0, 3, 2, 2, 1, 0 };
 	TArray<FVector> normals = { FVector::UpVector , FVector::UpVector, FVector::UpVector , FVector::UpVector };
 
 	CreateMeshSection_LinearColor(0, vertices, triangles, normals, UV0, LinearColors, MeshTangents, CollisionEnabled);
 
 	// Bottom
 	vertices = {
-	{-Size.X / 2, -Size.Y / 2, -Size.Z / 2 },
-	{-Size.X / 2,  Size.Y / 2, -Size.Z / 2 },
-	{ Size.X / 2, -Size.Y / 2, -Size.Z / 2 },
-	{ Size.X / 2,  Size.Y / 2, -Size.Z / 2 }
+	{-tmpX, -tmpY, -tmpZ },
+	{-tmpX,  tmpY, -tmpZ },
+	{ tmpX, -tmpY, -tmpZ },
+	{ tmpX,  tmpY, -tmpZ }
 	};
+
+
 	triangles = { 2, 1, 0, 1, 2, 3 };
 	normals = { -FVector::UpVector , -FVector::UpVector, -FVector::UpVector , -FVector::UpVector };
 	CreateMeshSection_LinearColor(1, vertices, triangles, normals, UV0, LinearColors, MeshTangents, CollisionEnabled);
 
 	// Backward
 	vertices = {
-	{-Size.X / 2, -Size.Y / 2, Size.Z / 2  },
-	{-Size.X / 2,  Size.Y / 2, Size.Z / 2  },
-	{-Size.X / 2, -Size.Y / 2, -Size.Z / 2  },
-	{-Size.X / 2,  Size.Y / 2, -Size.Z / 2  }
+	{-tmpX, -tmpY,  tmpZ },
+	{-tmpX,  tmpY,  tmpZ },
+	{-tmpX, -tmpY, -tmpZ },
+	{-tmpX,  tmpY, -tmpZ }
 	};
 	triangles = { 0, 2, 1, 1, 2, 3 };
 	normals = { -FVector::ForwardVector , -FVector::ForwardVector, -FVector::ForwardVector , -FVector::ForwardVector };
@@ -56,10 +65,10 @@ void UProceduralBoxComponent::Build(const FVector Size, bool CollisionEnabled, c
 
 	// Forward
 	vertices = {
-	{Size.X / 2, -Size.Y / 2,  Size.Z / 2  },
-	{Size.X / 2,  Size.Y / 2,  Size.Z / 2  },
-	{Size.X / 2, -Size.Y / 2, -Size.Z / 2 },
-	{Size.X / 2,  Size.Y / 2, -Size.Z / 2 }
+	{tmpX, -tmpY,  tmpZ },
+	{tmpX,  tmpY,  tmpZ },
+	{tmpX, -tmpY, -tmpZ },
+	{tmpX,  tmpY, -tmpZ }
 	};
 	triangles = { 2, 0, 1, 1, 3, 2 };
 	normals = { FVector::ForwardVector , FVector::ForwardVector, FVector::ForwardVector , FVector::ForwardVector };
@@ -67,10 +76,10 @@ void UProceduralBoxComponent::Build(const FVector Size, bool CollisionEnabled, c
 
 	// Left
 	vertices = {
-	{Size.X / 2, -Size.Y / 2, Size.Z / 2  },
-	{-Size.X / 2,  -Size.Y / 2, Size.Z / 2  },
-	{ Size.X / 2, -Size.Y / 2, -Size.Z / 2  },
-	{-Size.X / 2,  -Size.Y / 2, -Size.Z / 2 }
+	{ tmpX, -tmpY,  tmpZ },
+	{-tmpX, -tmpY,  tmpZ },
+	{ tmpX, -tmpY, -tmpZ },
+	{-tmpX, -tmpY, -tmpZ }
 	};
 	triangles = { 0, 2, 1, 1, 2, 3 };
 	normals = { -FVector::RightVector, -FVector::RightVector, -FVector::RightVector , -FVector::RightVector };
@@ -78,10 +87,10 @@ void UProceduralBoxComponent::Build(const FVector Size, bool CollisionEnabled, c
 
 	// Right
 	vertices = {
-	{Size.X / 2, Size.Y / 2, Size.Z / 2  },
-	{-Size.X / 2,  Size.Y / 2, Size.Z / 2  },
-	{ Size.X / 2, Size.Y / 2, -Size.Z / 2  },
-	{-Size.X / 2,  Size.Y / 2, -Size.Z / 2 }
+	{ tmpX, tmpY,  tmpZ },
+	{-tmpX, tmpY,  tmpZ },
+	{ tmpX, tmpY, -tmpZ },
+	{-tmpX, tmpY, -tmpZ }
 	};
 	triangles = { 0, 1, 2, 1, 3, 2 };
 	normals = { FVector::RightVector, FVector::RightVector, FVector::RightVector , FVector::RightVector };

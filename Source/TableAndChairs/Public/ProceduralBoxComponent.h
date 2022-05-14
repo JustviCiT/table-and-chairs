@@ -14,9 +14,9 @@ public:
 	UProceduralBoxComponent(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION(BlueprintCallable, Category="TaC")
-	void Build(const FVector Size, bool CollisionEnabled);
+	void Build(const FVector Size, bool CollisionEnabled = false);
 	
-	void Build(const FVector Size, bool CollisionEnabled, const TArray<FLinearColor> LinearColors, const TArray<FProcMeshTangent> MeshTangents);
+	void Build(const FVector Size, const TArray<FLinearColor> LinearColors, const TArray<FProcMeshTangent> MeshTangents, bool CollisionEnabled = false);
 
 	/**
 	Sets the specified material to all box faces

@@ -3,10 +3,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "ProceduralMeshComponent.h"
-#include "Materials/Material.h"
 #include "LogTaC.h"
 
 #include "ProceduralChairWithBackrest.h"
+#include "ProceduralTable.h"
 #include "ProceduralBoxComponent.h"
 
 #include "ProceduralTableWithChairs.generated.h"
@@ -20,49 +20,37 @@ class TABLEANDCHAIRS_API ATableActor : public AActor
 public:
 	ATableActor();
 
-	//UPROPERTY still does not support constexpr
+	static const float ANCHOR_SIZE;
+	static const float ANCHOR_HOVER_DISTANCE;
 
-	static constexpr bool SHOULD_HAVE_COLLISION = false;
-	static constexpr float TABLE_TOP_THICKNESS = 10.0f;
-	static constexpr float LEG_LENGTH = 65;
-	static constexpr float LEG_SIDE_SIZE = 10;
-	static const FVector2D DEFAULT_SIZE;
-	static constexpr float ANCHOR_SIZE = 25;
-	static constexpr float ANCHOR_HOVER_DISTANCE = 2;
+	static const float DISTANCE_BETWEEN_CHAIRS;
 
-	/**
-	Table min size is 1x1 meters
-	*/
-	static constexpr float TABLE_MIN_SIZE = 50.0f;
+	static const float CHAIRS_DISTANCE_FROM_TABLE;
+
+	static const float CHAIRS_INTERVAL;
 
 	/**
-	Table max size is 50x50 meters
+	Table min size is one chair with some distance
 	*/
-	static constexpr float TABLE_MAX_SIZE = 5000.0f;
+	static const float TABLE_MIN_SIZE;
 
+	static const float TABLE_MAX_SIZE;
+
+	static const int MAX_CHAIRS;
 
 private:
 
 	/**
 	The four table corners in clockwise order from the positive coordinates relative sector
 	*/
+	UPROPERTY()
 	TArray<UProceduralBoxComponent*> Corners;
 
-	/**
-	The procedural mesh of the table countertop
-	*/
-	UProceduralBoxComponent* CounterTop;
+	UPROPERTY()
+	TSubclassOf<AActor> SpawnedTable;
 
-	/**
-	The four procedural legs
-	*/
-	TArray<UProceduralBoxComponent*> Legs;
-	
-	/**
-	Cached TableSize
-	The real tablesize is calculated as the distance between the corners
-	*/
-	FVector2D TableSize = DEFAULT_SIZE;
+	UPROPERTY()
+	AProceduralTable* Table;
 
 protected:
 
@@ -84,20 +72,6 @@ public:
 	UProceduralMeshComponent * GetOppositeCorner(const UProceduralMeshComponent* CurrentCorner) const;
 
 	/**
-	The size of the table
-
-	@Return table size as FVector2D
-	*/
-	UFUNCTION(BlueprintPure, Category = "TaC")
-	FVector2D GetTableSize() const;
-
-	/**
-	Returns the total table height: legs + countertop
-	*/
-	UFUNCTION(BlueprintPure, Category = "TaC")
-	float GetTableHeight() const;
-
-	/**
 	Returns the four anchor corners of the table
 	In clockwise order from the positive sector
 
@@ -111,7 +85,11 @@ public:
 	* Changes the texture of a single corner from selected to enabled
 	* @Param CurrentCorner input corner
 	*/
+	UFUNCTION(BlueprintCallable, Category = "TaC")
 	void SetCornerSelected(const UProceduralMeshComponent* CurrentCorner);
+
+
+	UFUNCTION(BlueprintCallable, Category = "TaC")
 	void SetCornerEnabled(const UProceduralMeshComponent* CurrentCorner);
 
 	/**
@@ -137,12 +115,6 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable, Category = "TaC")
 	void RefreshLocations();
-
-	/**
-	The material applied to the entire table, set in the constructor, read only
-	*/
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "TaC")
-	UMaterial* TableMaterial;
 
 	/**
 	The material applied to the corner when it's not selected, set in the constructor, read only

@@ -1,50 +1,52 @@
 #include "ProceduralChairWithBackrest.h"
 
+const float AProceduralChair::CHAIR_SQUARE_SIZE = 30;
+const float AProceduralChair::CHAIR_SQUARE_THICKNESS = 2;
+
+const float AProceduralChair::CHAIR_LEG_HEIGHT = 45;
+const float AProceduralChair::CHAIR_LEG_SIZE = 4;
+
+const float AProceduralChair::CHAIR_BACKREST_HEIGHT = 60;
+const float AProceduralChair::CHAIR_BACKREST_THICKNESS = 2;
+
 AProceduralChair::AProceduralChair()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 
-	//static ConstructorHelpers::FObjectFinder<UMaterial> MaterialChair(TEXT("Material'/Game/Materials/GenericMaterial.GenericMaterial'"));
-	//if (MaterialChair.Succeeded())
-	//{
-	//	Material = MaterialChair.Object;
-	//	UE_LOG(LogTaC, Log, TEXT("Chair material loaded"));
-	//}
-	//else
-	//{
-	//	UE_LOG(LogTaC, Error, TEXT("Chair material loading error"));
-	//}
+	const float tmpChairSquare = CHAIR_SQUARE_SIZE * 0.5f;
+	const float tmpChairLeg = CHAIR_LEG_SIZE * 0.5f;
+	const float tmpChairHeight = CHAIR_LEG_HEIGHT * 0.5f;
 
 	// Spawn the chair legs
 	TArray<FVector> LegsCorners = {
-		{CHAIR_SQUARE_SIZE / 2 - CHAIR_LEG_SIZE / 2,CHAIR_SQUARE_SIZE / 2 - CHAIR_LEG_SIZE / 2,CHAIR_LEG_HEIGHT / 2},
-		{CHAIR_SQUARE_SIZE / 2 - CHAIR_LEG_SIZE / 2,-CHAIR_SQUARE_SIZE / 2 + CHAIR_LEG_SIZE / 2,CHAIR_LEG_HEIGHT / 2 },
-		{-CHAIR_SQUARE_SIZE / 2 + CHAIR_LEG_SIZE / 2,CHAIR_SQUARE_SIZE / 2 - CHAIR_LEG_SIZE / 2,CHAIR_LEG_HEIGHT / 2 },
-		{-CHAIR_SQUARE_SIZE / 2 + CHAIR_LEG_SIZE / 2,-CHAIR_SQUARE_SIZE / 2 + CHAIR_LEG_SIZE / 2,CHAIR_LEG_HEIGHT / 2 }
+		{ tmpChairSquare - tmpChairLeg, tmpChairSquare - tmpChairLeg, tmpChairHeight },
+		{ tmpChairSquare - tmpChairLeg,-tmpChairSquare + tmpChairLeg, tmpChairHeight },
+		{-tmpChairSquare + tmpChairLeg, tmpChairSquare - tmpChairLeg, tmpChairHeight },
+		{-tmpChairSquare + tmpChairLeg,-tmpChairSquare + tmpChairLeg, tmpChairHeight }
 	};
 	for (size_t i = 0; i < LegsCorners.Num(); i++)
 	{
 		const FString LegName = "Leg" + FString::FromInt(i);
 		auto LegComp = CreateDefaultSubobject<UProceduralBoxComponent>(*LegName);
-		LegComp->Build(FVector(CHAIR_LEG_SIZE, CHAIR_LEG_SIZE, CHAIR_LEG_HEIGHT), false);
+		LegComp->Build(FVector(CHAIR_LEG_SIZE, CHAIR_LEG_SIZE, CHAIR_LEG_HEIGHT));
 		LegComp->SetupAttachment(RootComponent);
 		LegComp->SetRelativeLocation(LegsCorners[i]);
 		LegComp->SetBoxMaterial(Material);
 	}
 
 	// Spawn the chair square
-	auto ChairSquare = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("ChairSquare"));
-	ChairSquare->Build(FVector(CHAIR_SQUARE_SIZE, CHAIR_SQUARE_SIZE, CHAIR_SQUARE_THICKNESS), false);
+	ChairSquare = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("ChairSquare"));
+	ChairSquare->Build(FVector(CHAIR_SQUARE_SIZE, CHAIR_SQUARE_SIZE, CHAIR_SQUARE_THICKNESS));
 	ChairSquare->SetupAttachment(RootComponent);
 	ChairSquare->SetRelativeLocation(FVector(0,0, CHAIR_LEG_HEIGHT+ CHAIR_SQUARE_THICKNESS/2));
 	ChairSquare->SetBoxMaterial(Material);
 
 	// Spawn the chair backrest
-	auto ChairBackrest = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("ChairBackrest"));
-	ChairBackrest->Build(FVector(CHAIR_BACKREST_THICKNESS, CHAIR_SQUARE_SIZE, CHAIR_BACKREST_HEIGHT), false);
+	ChairBackrest = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("ChairBackrest"));
+	ChairBackrest->Build(FVector(CHAIR_BACKREST_THICKNESS, CHAIR_SQUARE_SIZE, CHAIR_BACKREST_HEIGHT));
 	ChairBackrest->SetupAttachment(RootComponent);
-	ChairBackrest->SetRelativeLocation(FVector(-CHAIR_SQUARE_SIZE/2+CHAIR_BACKREST_THICKNESS/2, 0, CHAIR_LEG_HEIGHT + CHAIR_BACKREST_HEIGHT / 2));
+	ChairBackrest->SetRelativeLocation(FVector(-tmpChairSquare + CHAIR_BACKREST_THICKNESS/2, 0, CHAIR_LEG_HEIGHT + CHAIR_BACKREST_HEIGHT / 2));
 	ChairBackrest->SetBoxMaterial(Material);
 }

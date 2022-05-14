@@ -12,25 +12,32 @@ class TABLEANDCHAIRS_API AProceduralChair : public AActor
 {
 	GENERATED_BODY()
 
-	
+private:
+	/**
+	The procedural mesh of the chair top
+	*/
+	UPROPERTY()
+	UProceduralBoxComponent* ChairSquare;
+
+	/**
+	The procedural mesh of the chair back
+	*/
+	UPROPERTY()
+	UProceduralBoxComponent* ChairBackrest;
+
 public:	
 	AProceduralChair();
 
-	static constexpr float CHAIR_SQUARE_SIZE = 30;
-	static constexpr float CHAIR_SQUARE_THICKNESS = 2;
+	static const float CHAIR_SQUARE_SIZE;
+	static const float CHAIR_SQUARE_THICKNESS;
 
-	static constexpr float CHAIR_LEG_HEIGHT = 45;
-	static constexpr float CHAIR_LEG_SIZE = 4;
+	static const float CHAIR_LEG_HEIGHT;
+	static const float CHAIR_LEG_SIZE;
 
-	static constexpr float CHAIR_BACKREST_HEIGHT = 60;
-	static constexpr float CHAIR_BACKREST_THICKNESS = 2;
-
+	static const float CHAIR_BACKREST_HEIGHT;
+	static const float CHAIR_BACKREST_THICKNESS;
 
 public:	
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="TaC")
-	UProceduralMeshComponent* ChairMesh;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "TaC")
 	UMaterial* Material;
 };
