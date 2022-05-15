@@ -47,15 +47,12 @@ private:
 	TArray<UProceduralBoxComponent*> Corners;
 
 	UPROPERTY()
-	TSubclassOf<AActor> SpawnedTable;
-
-	UPROPERTY()
 	AProceduralTable* Table;
 
 protected:
 
-	virtual void OnConstruction(const FTransform& Transform) override;
-
+	//virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void BeginPlay() override;
 
 public:
 

@@ -44,10 +44,6 @@ public:
 
 	AProceduralTable();
 
-protected:
-
-	virtual void BeginPlay() override;
-
 public:	
 
 	static const float LEG_LENGTH;
@@ -84,5 +80,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "TaC")
 	float GetTableHeight() const;
 
+	UFUNCTION(BlueprintPure, Category = "TaC")
+	void UpdateTableWorldLocation(FVector& NewWorldLocation);
 
 };

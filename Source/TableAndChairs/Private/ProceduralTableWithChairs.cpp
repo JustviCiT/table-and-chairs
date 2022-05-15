@@ -7,7 +7,7 @@
 
 
 const float		ATableActor::ANCHOR_SIZE = 25;
-const float		ATableActor::ANCHOR_HOVER_DISTANCE = 2;
+const float		ATableActor::ANCHOR_HOVER_DISTANCE = 10;
 const float		ATableActor::DISTANCE_BETWEEN_CHAIRS = 50;
 const float		ATableActor::CHAIRS_DISTANCE_FROM_TABLE = 25;
 const float		ATableActor::CHAIRS_INTERVAL = (AProceduralChair::CHAIR_SQUARE_SIZE + DISTANCE_BETWEEN_CHAIRS);
@@ -22,11 +22,6 @@ ATableActor::ATableActor()
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 
-	Table = CreateDefaultSubobject<AProceduralTable>(TEXT("Table"));
-	//FActorSpawnParameters SpawnInfo;
-	//SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	//Table = GetWorld()->SpawnActor<AProceduralTable>(SpawnedTable, this->GetActorLocation(), this->GetActorRotation(), SpawnInfo);
-
 	// Create resizable corners
 	Corners = {
 		CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("XPositiveYPositive")),
@@ -39,7 +34,7 @@ ATableActor::ATableActor()
 	{
 		Corners[i]->SetupAttachment(RootComponent);
 		Corners[i]->Build(FVector(ANCHOR_SIZE, ANCHOR_SIZE, 1), true);
-		Corners[i]->ContainsPhysicsTriMeshData(true);
+		//Corners[i]->ContainsPhysicsTriMeshData(true);
 	}
 	static ConstructorHelpers::FObjectFinder<UMaterial> MaterialTileAnchor(TEXT("Material'/Game/Materials/M_TileAnchor.M_TileAnchor'"));
 	if (MaterialTileAnchor.Succeeded())
@@ -65,12 +60,6 @@ ATableActor::ATableActor()
 		UE_LOG(LogTaC, Error, TEXT("Resize anchor material selected failed loading"));
 	}
 
-
-	Corners[0]->SetRelativeLocation(FVector( Table->GetTableSize().X / 2,  Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
-	Corners[1]->SetRelativeLocation(FVector(-Table->GetTableSize().X / 2,  Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
-	Corners[2]->SetRelativeLocation(FVector(-Table->GetTableSize().X / 2, -Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
-	Corners[3]->SetRelativeLocation(FVector( Table->GetTableSize().X / 2, -Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
-
 }
 
 bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, const FVector NewCornerWorldLocation)
@@ -80,10 +69,10 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 
 	const FVector OldLocation = Corner->GetComponentLocation();
 	//UE_LOG(LogTaC, Log, TEXT("Old Location %s"), *OldLocation.ToString());
-	////const UProceduralMeshComponent* OppositeCorner = GetOppositeCorner(Corner);
-	//const FVector OppositeLocation = GetOppositeCorner(Corner)->GetRelativeLocation();
-	////const FVector OldSign = (OldLocation - OppositeCorner->GetRelativeTransform().GetLocation()).GetSignVector();
-	//const FVector OldSign = (OldLocation - OppositeLocation).GetSignVector();
+	const UProceduralMeshComponent* OppositeCorner = GetOppositeCorner(Corner);
+	const FVector OppositeLocation = GetOppositeCorner(Corner)->GetRelativeLocation();
+	//const FVector OldSign = (OldLocation - OppositeCorner->GetRelativeTransform().GetLocation()).GetSignVector();
+	const FVector OldSign = (OldLocation - OppositeLocation).GetSignVector();
 	//UE_LOG(LogTaC, Log, TEXT("Old Sign %s"), *OldSign.ToString());
 	// 
 	//// The current corner location is where the mouse ray hits the table plane
@@ -94,7 +83,7 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 	////ensureMsgf(ClockwiseCorner != OppositeCorner, TEXT("A clockwise corner can't be the opposite corner"));
 	UProceduralMeshComponent* CounterClockwiseCorner = GetCounterClockwiseCorner(Corner);
 	//ensureMsgf(CounterClockwiseCorner != OppositeCorner, TEXT("A counterclockwise corner can't be the opposite corner"));
-	//const FVector NewSign = (Corner->GetRelativeLocation() - OppositeLocation).GetSignVector();
+	const FVector NewSign = (Corner->GetRelativeLocation() - OppositeLocation).GetSignVector();
 	//UE_LOG(LogTaC, Log, TEXT("New Sign %s"), *NewSign.ToString());
 
 	// HACK: fix this ugly switch
@@ -132,12 +121,13 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 	const float DistanceClockwise = FVector::Distance(NewCornerWorldLocation, ClockwiseCorner->GetComponentLocation());
 	const float DistanceCounterClockwise = FVector::Distance(NewCornerWorldLocation, CounterClockwiseCorner->GetComponentLocation());
 
-	// Minimum table area check
+
+	//// Minimum table area check
 	if (DistanceClockwise < ATableActor::TABLE_MIN_SIZE ||
 		DistanceCounterClockwise < ATableActor::TABLE_MIN_SIZE ||
 		DistanceClockwise > ATableActor::TABLE_MAX_SIZE ||
-		DistanceCounterClockwise > ATableActor::TABLE_MAX_SIZE
-		//OldSign != NewSign
+		DistanceCounterClockwise > ATableActor::TABLE_MAX_SIZE ||
+		OldSign != NewSign
 		)
 	{
 		Corner->SetWorldLocation(OldLocation);
@@ -153,11 +143,28 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 }
 
 
-void ATableActor::OnConstruction(const FTransform & Transform)
+void ATableActor::BeginPlay()
 {
-	Super::OnConstruction(Transform);
+	Super::BeginPlay();
+
+	Table = GetWorld()->SpawnActor<AProceduralTable>(AProceduralTable::StaticClass(), this->GetActorTransform());
+	Table->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+	Corners[0]->SetRelativeLocation(FVector(Table->GetTableSize().X / 2, Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
+	Corners[1]->SetRelativeLocation(FVector(-Table->GetTableSize().X / 2, Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
+	Corners[2]->SetRelativeLocation(FVector(-Table->GetTableSize().X / 2, -Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
+	Corners[3]->SetRelativeLocation(FVector(Table->GetTableSize().X / 2, -Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
+
+	UE_LOG(LogTaC, Log, TEXT("This is called ..."));
 	RefreshLocations();
 }
+
+//void ATableActor::OnConstruction(const FTransform & Transform)
+//{
+//	Super::OnConstruction(Transform);
+//
+//
+//}
 
 TArray<UProceduralBoxComponent*> ATableActor::GetCorners() const
 {
@@ -221,18 +228,18 @@ void ATableActor::RefreshLocations()
 		FVector::Distance(Corners[0]->GetComponentLocation(), Corners[1]->GetComponentLocation()),
 		FVector::Distance(Corners[0]->GetComponentLocation(), Corners[3]->GetComponentLocation())
 	);
-	Table->SetTableSize(TmpTableSize);
 
 
 	// HACK: fix root location
-	//FVector NewRelativeRoot = FVector(
-	//	Corners[0]->GetRelativeLocation().X - Table->GetTableSize().X / 2,
-	//	Corners[0]->GetRelativeLocation().Y - Table->GetTableSize().Y / 2,
-	//	0
-	//);
-	//FVector NewWorldRoot = this->GetTransform().TransformPosition(NewRelativeRoot);
+	FVector NewRelativeRoot = FVector(
+		Corners[0]->GetRelativeLocation().X - Table->GetTableSize().X / 2,
+		Corners[0]->GetRelativeLocation().Y - Table->GetTableSize().Y / 2,
+		Table->GetTableHeight()
+	);
+	FVector NewWorldRoot = this->GetTransform().TransformPosition(NewRelativeRoot);
 
-
+	Table->UpdateTableWorldLocation(NewWorldRoot);
+	Table->SetTableSize(TmpTableSize);
 
 	// Remove old chairs
 	// TODO instead of removing all add the missing one 

@@ -31,30 +31,29 @@ AProceduralTable::AProceduralTable()
 	// Create countertop
 	CounterTop = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("Countertop"));
 	CounterTop->SetupAttachment(RootComponent);
-	CounterTop->Build(FVector(TableSize, TABLE_TOP_THICKNESS));
+	CounterTop->Build(FVector(TableSize, TABLE_TOP_THICKNESS),true);
 	CounterTop->SetRelativeLocation(FVector(GetActorLocation().X, GetActorLocation().Y, GetTableHeight()));
 	CounterTop->SetBoxMaterial(TableMaterial);
 
 
 	// Create legs
-
+	LegsOffsets = {
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 }
+	};
 
 	for (size_t i = 0; i < LegsOffsets.Num(); i++)
 	{
 		const FString LegName = "Leg" + FString::FromInt(i);
 		auto LegComp = CreateDefaultSubobject<UProceduralBoxComponent>(*LegName);
 		LegComp->Build(FVector(LEG_SIDE_SIZE, LEG_SIDE_SIZE, LEG_LENGTH));
-		LegComp->SetupAttachment(RootComponent);
-		LegComp->SetRelativeLocation(LegsOffsets[i]);
+		LegComp->SetupAttachment(CounterTop);
 		Legs.Add(LegComp);
 	}
 
-}
-
-void AProceduralTable::BeginPlay()
-{
-	Super::BeginPlay();
-	
+	UpdateLegsLocation();
 }
 
 void AProceduralTable::UpdateLegsLocation()
@@ -65,10 +64,10 @@ void AProceduralTable::UpdateLegsLocation()
 	const float tmpLegHeight = LEG_LENGTH * 0.5f + TABLE_TOP_THICKNESS * 0.5f;
 
 	LegsOffsets = {
-		{ tmpTableX - tmpLegWidth, tmpTableY - tmpLegWidth, tmpLegHeight },
-		{ tmpTableX - tmpLegWidth,-tmpTableY + tmpLegWidth, tmpLegHeight },
-		{-tmpTableX + tmpLegWidth, tmpTableY - tmpLegWidth, tmpLegHeight },
-		{-tmpTableX + tmpLegWidth,-tmpTableY + tmpLegWidth, tmpLegHeight }
+		{ tmpTableX - tmpLegWidth, tmpTableY - tmpLegWidth, -tmpLegHeight },
+		{ tmpTableX - tmpLegWidth,-tmpTableY + tmpLegWidth, -tmpLegHeight },
+		{-tmpTableX + tmpLegWidth, tmpTableY - tmpLegWidth, -tmpLegHeight },
+		{-tmpTableX + tmpLegWidth,-tmpTableY + tmpLegWidth, -tmpLegHeight }
 	};
 
 	// Refresh legs location
@@ -86,10 +85,7 @@ void AProceduralTable::SetTableSize(const FVector2D& pSize)
 	TableSize = pSize;
 
 	// Refresh countertop geometry
-	CounterTop->Build(FVector(TableSize, TABLE_TOP_THICKNESS));
-
-	CounterTop->SetWorldLocation(/*NewWorldRoot + */ GetActorLocation());
-
+	CounterTop->Build(FVector(TableSize, TABLE_TOP_THICKNESS), true);
 	UpdateLegsLocation();
 }
 
@@ -97,5 +93,10 @@ void AProceduralTable::SetTableSize(const FVector2D& pSize)
 float AProceduralTable::GetTableHeight() const
 {
 	return LEG_LENGTH + TABLE_TOP_THICKNESS;
+}
+
+void AProceduralTable::UpdateTableWorldLocation(FVector& NewWorldLocation)
+{
+	CounterTop->SetWorldLocation(NewWorldLocation +  GetActorLocation());
 }
 

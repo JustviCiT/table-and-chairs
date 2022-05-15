@@ -28,6 +28,8 @@ private:
 	void LeftClickPressed();
 	void LeftClickReleased();
 
+	void RightClickReleased();
+
 	void ExitGame();
 
 protected:
