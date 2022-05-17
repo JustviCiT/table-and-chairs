@@ -9,7 +9,7 @@
 #include "LogTaC.h"
 #include "ProceduralTable.generated.h"
 
-UCLASS()
+UCLASS(Blueprintable)
 class TABLEANDCHAIRS_API AProceduralTable : public AActor
 {
 	GENERATED_BODY()

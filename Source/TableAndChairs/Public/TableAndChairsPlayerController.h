@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "ProceduralTableWithChairs.h"
-#include "DrawDebugHelpers.h"
 #include "LogTaC.h"
 #include "Camera/CameraActor.h"
 #include "TableAndChairsPlayerController.generated.h"

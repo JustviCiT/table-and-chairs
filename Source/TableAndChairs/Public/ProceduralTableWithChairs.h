@@ -5,47 +5,15 @@
 #include "ProceduralMeshComponent.h"
 #include "LogTaC.h"
 
-#include "ProceduralChairWithBackrest.h"
+#include "ChairPair.h"
 #include "ProceduralTable.h"
 #include "ProceduralBoxComponent.h"
 
 #include "ProceduralTableWithChairs.generated.h"
 
-USTRUCT()
-struct FChairCuple
-{
-	GENERATED_BODY()
 
-public:
-	UPROPERTY(VisibleAnywhere)
-	AProceduralChair* BaseChair;
+class AProceduralChair;
 
-	UPROPERTY(VisibleAnywhere)
-	AProceduralChair* MirrorChair;
-
-	void Delete()
-	{
-		if (BaseChair) 
-		{
-			if (!BaseChair->IsValidLowLevel()) return;
-			if (BaseChair)
-			{
-				BaseChair->ConditionalBeginDestroy();
-				BaseChair->Destroy();
-			}
-		}
-
-		if (MirrorChair)
-		{
-			if (!MirrorChair->IsValidLowLevel()) return;
-			if (MirrorChair)
-			{
-				MirrorChair->ConditionalBeginDestroy();
-				MirrorChair->Destroy();
-			}
-		}
-	}
-};
 
 UCLASS(Blueprintable)
 class TABLEANDCHAIRS_API ATableActor : public AActor
@@ -90,6 +58,9 @@ private:
 
 	UPROPERTY()
 	TArray<FChairCuple>  LeftRightChairs;
+
+	UFUNCTION()
+	void SpawnChairs(int HowMany, TArray<FChairCuple>& Container);
 
 protected:
 
