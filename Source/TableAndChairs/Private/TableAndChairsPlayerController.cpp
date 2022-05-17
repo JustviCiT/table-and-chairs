@@ -28,8 +28,8 @@ void ATableAndChairsPlayerController::LeftClickPressed()
 	FVector Start;
 	FVector ForwardVector;
 	bool flag = DeprojectMousePositionToWorld(Start, ForwardVector);
-	UE_LOG(LogTaC, Log, TEXT("START %s"), *Start.ToString());
-	UE_LOG(LogTaC, Log, TEXT("FORWARD VECTOR %s"), *ForwardVector.ToString());
+	//UE_LOG(LogTaC, Log, TEXT("START %s"), *Start.ToString());
+	//UE_LOG(LogTaC, Log, TEXT("FORWARD VECTOR %s"), *ForwardVector.ToString());
 	if (!flag) return;
 
 	FVector End = ((ForwardVector * EDITING_RAY_LENGTH) + Start);
@@ -37,23 +37,26 @@ void ATableAndChairsPlayerController::LeftClickPressed()
 	// Spawn a ray from the cursor to "infinity" to find an editable table
 	FCollisionQueryParams CollisionParams;
 	FHitResult OutHit;
+
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams) &&
-		OutHit.bBlockingHit )
+		OutHit.bBlockingHit)
 	{
 		//UE_LOG(LogTaC, Log, TEXT("CLASS NAME: %s"), *OutHit.GetActor()->GetClass()->GetName());
 		UClass* ClassHit = OutHit.GetActor()->GetClass();
 
-		if (ClassHit == ATableActor::StaticClass()) 
+		if (ClassHit == ATableActor::StaticClass())
 		{
 			TableBeingEdited = (ATableActor*)OutHit.GetActor();
 			CurrentCornerDraggedComponent = StaticCast<UProceduralMeshComponent*>(OutHit.GetComponent());
 
 			TableBeingEdited->SetCornerSelected(CurrentCornerDraggedComponent);
 		}
-		//else if (ClassHit == AProceduralTable::StaticClass())
-		//{
-
-		//}
+		else
+		{
+			FActorSpawnParameters SpawnParameters;
+			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+			GetWorld()->SpawnActor<ATableActor>(ATableActor::StaticClass(), OutHit.ImpactPoint, FRotator::ZeroRotator, SpawnParameters);
+		}
 
 	}
 }
@@ -98,29 +101,24 @@ void ATableAndChairsPlayerController::RightClickReleased()
 		{
 			if (ClassHit->GetClass() == ATableActor::StaticClass()) 
 			{
-				UE_LOG(LogTaC, Log, TEXT(" Table actor Static "));	
-
+				if (!ClassHit->IsValidLowLevel()) return;
+				ClassHit->ConditionalBeginDestroy();
 				ClassHit->Destroy();
+				UE_LOG(LogTaC, Log, TEXT(" Table actor kill from parent"));	
 			}
-			else
-			{
-				checkNoEntry();
-				UE_LOG(LogTaC, Log, TEXT(" name?  "), *ClassHit->GetClass()->GetName());
-			}
+
 		}
 		else
 		{
 			
 			if (MainActor->GetClass() == ATableActor::StaticClass())
 			{
-				UE_LOG(LogTaC, Log, TEXT(" Table actor Static 2"));
-
+				UE_LOG(LogTaC, Log, TEXT(" Table actor kill "));
+				if (!MainActor->IsValidLowLevel()) return;
+				MainActor->ConditionalBeginDestroy();
 				MainActor->Destroy();
 			}
-			else
-			{
-				UE_LOG(LogTaC, Log, TEXT(" name? 2 "), *MainActor->GetName());
-			}
+
 		}
 
 	}

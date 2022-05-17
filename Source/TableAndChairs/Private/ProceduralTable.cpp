@@ -32,7 +32,7 @@ AProceduralTable::AProceduralTable()
 	CounterTop = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("Countertop"));
 	CounterTop->SetupAttachment(RootComponent);
 	CounterTop->Build(FVector(TableSize, TABLE_TOP_THICKNESS),true);
-	CounterTop->SetRelativeLocation(FVector(GetActorLocation().X, GetActorLocation().Y, GetTableHeight()));
+	//CounterTop->SetRelativeLocation(FVector(GetActorLocation().X, GetActorLocation().Y, GetTableHeight()));
 	CounterTop->SetBoxMaterial(TableMaterial);
 
 
@@ -75,6 +75,13 @@ void AProceduralTable::UpdateLegsLocation()
 		Legs[i]->SetRelativeLocation(LegsOffsets[i]);
 }
 
+void AProceduralTable::BeginPlay()
+{
+	Super::BeginPlay();
+
+
+}
+
 FVector2D AProceduralTable::GetTableSize() const
 {
 	return TableSize;
@@ -97,6 +104,6 @@ float AProceduralTable::GetTableHeight() const
 
 void AProceduralTable::UpdateTableWorldLocation(FVector& NewWorldLocation)
 {
-	CounterTop->SetWorldLocation(NewWorldLocation +  GetActorLocation());
+	CounterTop->SetWorldLocation(NewWorldLocation ); //+  GetActorLocation()
 }
 

@@ -40,6 +40,9 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "TaC")
 	void UpdateLegsLocation();
 
+protected:
+	virtual void BeginPlay() override;
+
 public:	
 
 	AProceduralTable();

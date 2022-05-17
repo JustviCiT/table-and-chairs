@@ -11,6 +11,42 @@
 
 #include "ProceduralTableWithChairs.generated.h"
 
+USTRUCT()
+struct FChairCuple
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(VisibleAnywhere)
+	AProceduralChair* BaseChair;
+
+	UPROPERTY(VisibleAnywhere)
+	AProceduralChair* MirrorChair;
+
+	void Delete()
+	{
+		if (BaseChair) 
+		{
+			if (!BaseChair->IsValidLowLevel()) return;
+			if (BaseChair)
+			{
+				BaseChair->ConditionalBeginDestroy();
+				BaseChair->Destroy();
+			}
+		}
+
+		if (MirrorChair)
+		{
+			if (!MirrorChair->IsValidLowLevel()) return;
+			if (MirrorChair)
+			{
+				MirrorChair->ConditionalBeginDestroy();
+				MirrorChair->Destroy();
+			}
+		}
+	}
+};
+
 UCLASS(Blueprintable)
 class TABLEANDCHAIRS_API ATableActor : public AActor
 {
@@ -49,10 +85,17 @@ private:
 	UPROPERTY()
 	AProceduralTable* Table;
 
+	UPROPERTY()
+	TArray<FChairCuple>  FrontBackChairs;
+
+	UPROPERTY()
+	TArray<FChairCuple>  LeftRightChairs;
+
 protected:
 
 	//virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
+	virtual void BeginDestroy() override; 
 
 public:
 

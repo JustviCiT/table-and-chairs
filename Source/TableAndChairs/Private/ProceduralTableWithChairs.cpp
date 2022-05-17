@@ -142,13 +142,12 @@ bool ATableActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, cons
 	return true;
 }
 
-
 void ATableActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Table = GetWorld()->SpawnActor<AProceduralTable>(AProceduralTable::StaticClass(), this->GetActorTransform());
-	Table->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	Table = GetWorld()->SpawnActor<AProceduralTable>(AProceduralTable::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator);
+	Table->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 
 	Corners[0]->SetRelativeLocation(FVector(Table->GetTableSize().X / 2, Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
 	Corners[1]->SetRelativeLocation(FVector(-Table->GetTableSize().X / 2, Table->GetTableSize().Y / 2, Table->GetTableHeight() + ANCHOR_HOVER_DISTANCE));
@@ -159,12 +158,29 @@ void ATableActor::BeginPlay()
 	RefreshLocations();
 }
 
-//void ATableActor::OnConstruction(const FTransform & Transform)
-//{
-//	Super::OnConstruction(Transform);
-//
-//
-//}
+void ATableActor::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	if (!Table->IsValidLowLevel()) return;
+	if (Table)
+	{
+		Table->ConditionalBeginDestroy();
+		Table->Destroy();
+	}
+
+	for (size_t i = 0; i < LeftRightChairs.Num(); ++i)
+	{
+		LeftRightChairs[i].Delete();
+	}
+	LeftRightChairs.Empty();
+
+	for (size_t i = 0; i < FrontBackChairs.Num(); ++i)
+	{
+		FrontBackChairs[i].Delete();
+	}
+	FrontBackChairs.Empty();
+}
 
 TArray<UProceduralBoxComponent*> ATableActor::GetCorners() const
 {
@@ -248,74 +264,150 @@ void ATableActor::RefreshLocations()
 	for (size_t i = 0; i < SpawnedChairs.Num(); i++)
 		SpawnedChairs[i]->Destroy();
 
+
 	int ChairsToSpawnOnYSide = Table->GetTableSize().Y / CHAIRS_INTERVAL;
 	int ChairsToSpawnOnXSide = Table->GetTableSize().X / CHAIRS_INTERVAL;
 
+	if (ChairsToSpawnOnYSide >  FrontBackChairs.Num())
+	{
+		ChairsToSpawnOnYSide -=  FrontBackChairs.Num();
+	}
+	else
+	{
+		ChairsToSpawnOnYSide =  FrontBackChairs.Num() - ChairsToSpawnOnYSide;
+		for (int i = ChairsToSpawnOnYSide; i-- > 0; )
+		{
+			 FrontBackChairs[i].Delete();
+			 FrontBackChairs.RemoveAt(i);
+		}
+
+		ChairsToSpawnOnYSide = 0;
+	}
+
+
+	if (ChairsToSpawnOnXSide > LeftRightChairs.Num())
+	{
+		ChairsToSpawnOnXSide -= LeftRightChairs.Num();
+	}
+	else
+	{
+		ChairsToSpawnOnXSide = LeftRightChairs.Num() - ChairsToSpawnOnXSide;
+		for (int i = ChairsToSpawnOnXSide; i-- > 0; )
+		{
+			LeftRightChairs[i].Delete();
+			LeftRightChairs.RemoveAt(i);
+		}
+
+		ChairsToSpawnOnXSide = 0;
+	}
+
+
+
+
 	// The offset to add so the chairs line is centered
 	// Remaining space / 2
-	const float CHAIRS_YLINE_LENGTH = ChairsToSpawnOnYSide * AProceduralChair::CHAIR_SQUARE_SIZE + (ChairsToSpawnOnYSide-1)*DISTANCE_BETWEEN_CHAIRS;
-	const float YChairsSpawnOffset = (Table->GetTableSize().Y - CHAIRS_YLINE_LENGTH ) / 2;
+	const float CHAIRS_YLINE_LENGTH =  FrontBackChairs.Num() * AProceduralChair::CHAIR_SQUARE_SIZE + ( FrontBackChairs.Num() -1) * DISTANCE_BETWEEN_CHAIRS;
+	const float YChairsSpawnOffset = (Table->GetTableSize().Y - CHAIRS_YLINE_LENGTH ) /2 ;
 	
 
-	// Backward side
+	// forward side
 	FVector ChairsForwardSpawnPoint = Corners[2]->GetComponentLocation();
 	ChairsForwardSpawnPoint.X -= CHAIRS_DISTANCE_FROM_TABLE;
 	ChairsForwardSpawnPoint.Y += AProceduralChair::CHAIR_SQUARE_SIZE/2;
-	ChairsForwardSpawnPoint.Z = this->GetActorLocation().Z;
-	
-	for (int y = 0; y < ChairsToSpawnOnYSide; y++)
-	{	
-		UChildActorComponent* NewChair = NewObject<UChildActorComponent>(this);
-		NewChair->SetupAttachment(RootComponent);
-		NewChair->SetChildActorClass(AProceduralChair::StaticClass());
-		NewChair->SetWorldLocation(FVector(ChairsForwardSpawnPoint.X, YChairsSpawnOffset + ChairsForwardSpawnPoint.Y + y * CHAIRS_INTERVAL, this->GetActorLocation().Z));
-	}
 
-	// Forward side
 	FVector ChairsBackwardSpawnPoint = Corners[3]->GetComponentLocation();
 	ChairsBackwardSpawnPoint.X += CHAIRS_DISTANCE_FROM_TABLE;
-	ChairsBackwardSpawnPoint.Y += AProceduralChair::CHAIR_SQUARE_SIZE/2;
-	ChairsBackwardSpawnPoint.Z = this->GetActorLocation().Z;
-	for (int y = 0; y < ChairsToSpawnOnYSide; y++)
+	ChairsBackwardSpawnPoint.Y += AProceduralChair::CHAIR_SQUARE_SIZE / 2;
+	
+	for (int y = 0; y < ChairsToSpawnOnYSide; ++y)
+	{	
+		AProceduralChair* Chair = GetWorld()->SpawnActor<AProceduralChair>(AProceduralChair::StaticClass(), 
+			FVector::ZeroVector, 
+			FRotator::ZeroRotator);
+
+		AProceduralChair* MirroredChair = GetWorld()->SpawnActor<AProceduralChair>(AProceduralChair::StaticClass(),
+			FVector::ZeroVector,
+			FRotator::ZeroRotator);
+
+		FChairCuple BothChairs;
+		BothChairs.BaseChair = Chair;
+		BothChairs.MirrorChair = MirroredChair;
+		 FrontBackChairs.Add(BothChairs);
+
+		//UChildActorComponent* NewChair = NewObject<UChildActorComponent>(this);
+		//NewChair->SetupAttachment(RootComponent);
+		//NewChair->SetChildActorClass(AProceduralChair::StaticClass());
+		//NewChair->SetWorldLocation(FVector(ChairsForwardSpawnPoint.X, YChairsSpawnOffset + ChairsForwardSpawnPoint.Y + y * CHAIRS_INTERVAL, this->GetActorLocation().Z));
+	}
+	for (int y = 0; y <  FrontBackChairs.Num(); ++y)
 	{
-		UChildActorComponent* NewChair = NewObject<UChildActorComponent>(this);
-		NewChair->SetupAttachment(RootComponent);
-		NewChair->SetChildActorClass(AProceduralChair::StaticClass());
-		NewChair->SetWorldLocation(FVector(ChairsBackwardSpawnPoint.X, YChairsSpawnOffset + ChairsBackwardSpawnPoint.Y + y * CHAIRS_INTERVAL, this->GetActorLocation().Z));
-		NewChair->SetRelativeRotation(FRotator(0, -180, 0));
+		 FrontBackChairs[y].BaseChair->SetActorLocation(FVector(ChairsForwardSpawnPoint.X, YChairsSpawnOffset + ChairsForwardSpawnPoint.Y + y * CHAIRS_INTERVAL, this->GetActorLocation().Z));
+		 FrontBackChairs[y].MirrorChair->SetActorLocationAndRotation(FVector(ChairsBackwardSpawnPoint.X, YChairsSpawnOffset + ChairsBackwardSpawnPoint.Y + y * CHAIRS_INTERVAL, this->GetActorLocation().Z), FRotator(0, -180, 0));
 	}
 
-	const float CHAIRS_XLINE_LENGTH = ChairsToSpawnOnXSide * AProceduralChair::CHAIR_SQUARE_SIZE + (ChairsToSpawnOnXSide - 1)*DISTANCE_BETWEEN_CHAIRS;
+
+
+	//  side
+	//for (int y = 0; y < ChairsToSpawnOnYSide; y++)
+	//{
+	//	UChildActorComponent* NewChair = NewObject<UChildActorComponent>(this); 
+	//	NewChair->SetupAttachment(RootComponent);
+	//	NewChair->SetChildActorClass(AProceduralChair::StaticClass());
+	//	NewChair->SetWorldLocation(FVector(ChairsBackwardSpawnPoint.X, YChairsSpawnOffset + ChairsBackwardSpawnPoint.Y + y * CHAIRS_INTERVAL, this->GetActorLocation().Z));
+	//	NewChair->SetRelativeRotation(FRotator(0, -180, 0)); 
+	//}
+
+	const float CHAIRS_XLINE_LENGTH = LeftRightChairs.Num() * AProceduralChair::CHAIR_SQUARE_SIZE + (LeftRightChairs.Num() - 1)*DISTANCE_BETWEEN_CHAIRS;
 	const float XChairsSpawnOffset = (Table->GetTableSize().X - CHAIRS_XLINE_LENGTH) / 2;
 
 	// Left side
 	FVector ChairsLeftSpawnPoint = Corners[2]->GetComponentLocation();
 	ChairsLeftSpawnPoint.Y -= CHAIRS_DISTANCE_FROM_TABLE;
 	ChairsLeftSpawnPoint.X += AProceduralChair::CHAIR_SQUARE_SIZE / 2;
-	ChairsBackwardSpawnPoint.Z = this->GetActorLocation().Z;
-	for (int x = 0; x < ChairsToSpawnOnXSide; x++)
-	{
-		UChildActorComponent* NewChair = NewObject<UChildActorComponent>(this);
-		NewChair->SetupAttachment(RootComponent);
-		NewChair->SetChildActorClass(AProceduralChair::StaticClass());
-		NewChair->SetWorldLocation(FVector(XChairsSpawnOffset + ChairsLeftSpawnPoint.X + x * CHAIRS_INTERVAL, ChairsLeftSpawnPoint.Y, this->GetActorLocation().Z));
-		NewChair->SetRelativeRotation(FRotator(0, 90, 0));
-	}
 
-	// Right side
 	FVector ChairsRightSpawnPoint = Corners[1]->GetComponentLocation();
 	ChairsRightSpawnPoint.Y += CHAIRS_DISTANCE_FROM_TABLE;
 	ChairsRightSpawnPoint.X += AProceduralChair::CHAIR_SQUARE_SIZE / 2;
-	ChairsRightSpawnPoint.Z = this->GetActorLocation().Z;
-	for (int x = 0; x < ChairsToSpawnOnXSide; x++)
+
+	for (int x = 0; x < ChairsToSpawnOnXSide; ++x)
 	{
-		UChildActorComponent* NewChair = NewObject<UChildActorComponent>(this);
-		NewChair->SetupAttachment(RootComponent);
-		NewChair->SetChildActorClass(AProceduralChair::StaticClass());
-		NewChair->SetWorldLocation(FVector(XChairsSpawnOffset + ChairsRightSpawnPoint.X + x * CHAIRS_INTERVAL, ChairsRightSpawnPoint.Y, this->GetActorLocation().Z));
-		NewChair->SetRelativeRotation(FRotator(0, -90, 0));
+		AProceduralChair* Chair = GetWorld()->SpawnActor<AProceduralChair>(AProceduralChair::StaticClass(),
+			FVector::ZeroVector,
+			FRotator::ZeroRotator);
+
+		AProceduralChair* MirroredChair = GetWorld()->SpawnActor<AProceduralChair>(AProceduralChair::StaticClass(),
+			FVector::ZeroVector,
+			FRotator::ZeroRotator);
+
+		FChairCuple BothChairs;
+		BothChairs.BaseChair = Chair;
+		BothChairs.MirrorChair = MirroredChair;
+		LeftRightChairs.Add(BothChairs);
+
+		//UChildActorComponent* NewChair = NewObject<UChildActorComponent>(this);
+		//NewChair->SetupAttachment(RootComponent);
+		//NewChair->SetChildActorClass(AProceduralChair::StaticClass());
+		//NewChair->SetWorldLocation(FVector(XChairsSpawnOffset + ChairsLeftSpawnPoint.X + x * CHAIRS_INTERVAL, ChairsLeftSpawnPoint.Y, this->GetActorLocation().Z));
+		//NewChair->SetRelativeRotation(FRotator(0, 90, 0));
 	}
 
+	for (int x = 0; x < LeftRightChairs.Num(); ++x)
+	{
+		LeftRightChairs[x].BaseChair->SetActorLocationAndRotation(FVector(XChairsSpawnOffset + ChairsLeftSpawnPoint.X + x * CHAIRS_INTERVAL, ChairsLeftSpawnPoint.Y, this->GetActorLocation().Z), FRotator(0, 90, 0));
+		LeftRightChairs[x].MirrorChair->SetActorLocationAndRotation(FVector(XChairsSpawnOffset + ChairsRightSpawnPoint.X + x * CHAIRS_INTERVAL, ChairsRightSpawnPoint.Y, this->GetActorLocation().Z), FRotator(0, -90, 0));
+	}
+
+	// Right side
+
+	//for (int x = 0; x < ChairsToSpawnOnXSide; ++x)
+	//{
+		//UChildActorComponent* NewChair = NewObject<UChildActorComponent>(this);
+		//NewChair->SetupAttachment(RootComponent);
+		//NewChair->SetChildActorClass(AProceduralChair::StaticClass());
+		//NewChair->SetWorldLocation(FVector(XChairsSpawnOffset + ChairsRightSpawnPoint.X + x * CHAIRS_INTERVAL, ChairsRightSpawnPoint.Y, this->GetActorLocation().Z));
+		//NewChair->SetRelativeRotation(FRotator(0, -90, 0));
+	//}
+
 	// Register the chairs
-	RegisterAllComponents();
+	//RegisterAllComponents();
 }
