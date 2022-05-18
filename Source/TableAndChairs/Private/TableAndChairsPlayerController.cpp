@@ -1,8 +1,18 @@
 #include "TableAndChairsPlayerController.h"
 
+
+const float ATableAndChairsPlayerController::EDITING_RAY_LENGTH = 5000.0f;
+
 void ATableAndChairsPlayerController::ExitGame()
 {
 	FGenericPlatformMisc::RequestExit(false);
+}
+
+void ATableAndChairsPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FirstCamera = Cast<ACamera>(GetPawn());
 }
 
 void ATableAndChairsPlayerController::SetupInputComponent()
@@ -18,6 +28,42 @@ void ATableAndChairsPlayerController::SetupInputComponent()
 	InputComponent->BindAction("MouseLeftClicked", IE_Released, this, &ATableAndChairsPlayerController::LeftClickReleased);
 	InputComponent->BindAction("Escape", IE_Pressed, this, &ATableAndChairsPlayerController::ExitGame);
 	InputComponent->BindAction("MouseRightClicked", IE_Released, this, &ATableAndChairsPlayerController::RightClickReleased);
+
+	InputComponent->BindAxis("Zoom", this, &ATableAndChairsPlayerController::ZoomInOut);
+	InputComponent->BindAxis("MoveUp", this, &ATableAndChairsPlayerController::MoveUp);
+	InputComponent->BindAxis("MoveDown", this, &ATableAndChairsPlayerController::MoveDown);
+	InputComponent->BindAxis("MoveLeft", this, &ATableAndChairsPlayerController::MoveLeft);
+	InputComponent->BindAxis("MoveRight", this, &ATableAndChairsPlayerController::MoveRight);
+}
+
+void ATableAndChairsPlayerController::ZoomInOut(float AxisValue)
+{
+	MovementZoom = FMath::Clamp(AxisValue, -1.0f, 1.0f);
+	//UE_LOG(LogTaC, Log, TEXT("ZoomIn: %f"), MovementZoom);
+}
+
+void ATableAndChairsPlayerController::MoveUp(float AxisValue)
+{
+	MovementInputLeftUp.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f);
+	//UE_LOG(LogTaC, Log, TEXT("MoveUp: %s"), *MovementInputLeftUp.ToString());
+}
+
+void ATableAndChairsPlayerController::MoveDown(float AxisValue)
+{
+	MovementInputRightDown.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f);
+	//UE_LOG(LogTaC, Log, TEXT("MoveDown: %s"), *MovementInputRightDown.ToString());
+}
+
+void ATableAndChairsPlayerController::MoveRight(float AxisValue)
+{
+	MovementInputRightDown.X = FMath::Clamp(AxisValue, -1.0f, 1.0f);
+	//UE_LOG(LogTaC, Log, TEXT("MoveRight: %s"), *MovementInputRightDown.ToString());
+}
+
+void ATableAndChairsPlayerController::MoveLeft(float AxisValue)
+{
+	MovementInputLeftUp.X = FMath::Clamp(AxisValue, -1.0f, 1.0f);
+	//UE_LOG(LogTaC, Log, TEXT("MoveLeft: %s"), *MovementInputLeftUp.ToString());
 }
 
 
@@ -127,6 +173,25 @@ void ATableAndChairsPlayerController::RightClickReleased()
 void ATableAndChairsPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (FirstCamera && 
+		( MovementZoom  != 0.0f ||
+		 !MovementInputRightDown.IsZero() ||
+		 !MovementInputLeftUp.IsZero()
+		))
+	{
+		MovementZoom = MovementZoom * EDITING_RAY_LENGTH;
+		MovementInputRightDown = MovementInputRightDown.GetSafeNormal() * EDITING_RAY_LENGTH;
+		MovementInputLeftUp = MovementInputLeftUp.GetSafeNormal() * EDITING_RAY_LENGTH;
+		
+		FVector NewLocation = FirstCamera->GetActorLocation();
+		NewLocation += FirstCamera->GetActorRightVector() * (MovementInputLeftUp.X + MovementInputRightDown.X) * DeltaTime;
+		NewLocation += FirstCamera->GetActorUpVector() * (MovementInputLeftUp.Y + MovementInputRightDown.Y) * DeltaTime;
+		NewLocation += FirstCamera->GetActorForwardVector() * MovementZoom * DeltaTime;
+		FirstCamera->SetActorLocation(NewLocation);
+
+		UE_LOG(LogTaC, Log, TEXT("ENTEER"));
+	}
 
 	if (TableBeingEdited == nullptr || CurrentCornerDraggedComponent == nullptr)
 		return;

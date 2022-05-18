@@ -3,6 +3,7 @@
 ATableAndChairsGameModeBase::ATableAndChairsGameModeBase() 
 {
 	PlayerControllerClass = ATableAndChairsPlayerController::StaticClass();
+	DefaultPawnClass = ACamera::StaticClass();
 }
 
 void ATableAndChairsGameModeBase::BeginPlay()
