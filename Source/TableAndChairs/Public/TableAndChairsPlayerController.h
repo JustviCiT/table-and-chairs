@@ -2,7 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "ProceduralTableWithChairs.h"
+#include "Corner.h"
+#include "TableAndChair.h"
 #include "LogTaC.h"
 #include "Camera/CameraActor.h"
 #include "Camera.h"
@@ -21,7 +22,7 @@ private:
 
 	// This is the table currently being edited by the user
 	UPROPERTY()
-	ATableActor* TableBeingEdited;
+	ATableAndChair* TableBeingEdited;
 
 	// This is the corner of the table currently being edited
 	UPROPERTY()

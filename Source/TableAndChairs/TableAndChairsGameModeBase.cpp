@@ -10,5 +10,5 @@ void ATableAndChairsGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetWorld()->SpawnActor<ATableActor>(FVector::ZeroVector, FRotator::ZeroRotator);
+	GetWorld()->SpawnActor<ATableAndChair>(FVector::ZeroVector, FRotator::ZeroRotator);
 }

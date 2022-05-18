@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "TableAndChairsPlayerController.h"
-#include "Camera.h"
+#include "TableAndChairs.h"
 #include "TableAndChairsGameModeBase.generated.h"
 
 

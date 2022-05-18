@@ -87,21 +87,27 @@ void ATableAndChairsPlayerController::LeftClickPressed()
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams) &&
 		OutHit.bBlockingHit)
 	{
-		//UE_LOG(LogTaC, Log, TEXT("CLASS NAME: %s"), *OutHit.GetActor()->GetClass()->GetName());
 		UClass* ClassHit = OutHit.GetActor()->GetClass();
+		//UE_LOG(LogTaC, Log, TEXT("CLASS NAME: %s"), *OutHit.GetActor()->GetClass()->GetName());
 
-		if (ClassHit == ATableActor::StaticClass())
+		if (ClassHit == ACornerActor::StaticClass())
 		{
-			TableBeingEdited = (ATableActor*)OutHit.GetActor();
-			CurrentCornerDraggedComponent = StaticCast<UProceduralMeshComponent*>(OutHit.GetComponent());
+			TableBeingEdited = Cast<ATableAndChair>(OutHit.GetActor()->GetAttachParentActor());
+			if (!TableBeingEdited)
+			{
+				UE_LOG(LogTaC, Error, TEXT("Table is null"));
+				return;
+			}
 
-			TableBeingEdited->SetCornerSelected(CurrentCornerDraggedComponent);
+			CurrentCornerDraggedComponent = StaticCast<UProceduralMeshComponent*>(OutHit.GetComponent());
+			//UE_LOG(LogTaC, Log, TEXT("component %s "), *OutHit.GetComponent()->GetName());
+			TableBeingEdited->GetCornerActor()->SetCornerSelected(CurrentCornerDraggedComponent);
 		}
 		else
 		{
 			FActorSpawnParameters SpawnParameters;
 			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
-			GetWorld()->SpawnActor<ATableActor>(ATableActor::StaticClass(), OutHit.ImpactPoint, FRotator::ZeroRotator, SpawnParameters);
+			GetWorld()->SpawnActor<ATableAndChair>(ATableAndChair::StaticClass(), OutHit.ImpactPoint, FRotator::ZeroRotator, SpawnParameters);
 		}
 
 	}
@@ -116,7 +122,7 @@ void ATableAndChairsPlayerController::LeftClickReleased()
 		return;
 	}
 	
-	TableBeingEdited->SetCornerEnabled(CurrentCornerDraggedComponent);
+	TableBeingEdited->GetCornerActor()->SetCornerEnabled(CurrentCornerDraggedComponent);
 
 	TableBeingEdited = nullptr;
 	CurrentCornerDraggedComponent = nullptr;
@@ -145,7 +151,7 @@ void ATableAndChairsPlayerController::RightClickReleased()
 
 		if (ClassHit != nullptr)
 		{
-			if (ClassHit->GetClass() == ATableActor::StaticClass()) 
+			if (ClassHit->GetClass() == ATableAndChair::StaticClass()) 
 			{
 				if (!ClassHit->IsValidLowLevel()) return;
 				ClassHit->ConditionalBeginDestroy();
@@ -157,12 +163,12 @@ void ATableAndChairsPlayerController::RightClickReleased()
 		else
 		{
 			
-			if (MainActor->GetClass() == ATableActor::StaticClass())
+			if (MainActor->GetClass() == ATableAndChair::StaticClass())
 			{
-				UE_LOG(LogTaC, Log, TEXT(" Table actor kill "));
 				if (!MainActor->IsValidLowLevel()) return;
 				MainActor->ConditionalBeginDestroy();
 				MainActor->Destroy();
+				UE_LOG(LogTaC, Log, TEXT(" Table actor kill "));
 			}
 
 		}
@@ -189,8 +195,6 @@ void ATableAndChairsPlayerController::Tick(float DeltaTime)
 		NewLocation += FirstCamera->GetActorUpVector() * (MovementInputLeftUp.Y + MovementInputRightDown.Y) * DeltaTime;
 		NewLocation += FirstCamera->GetActorForwardVector() * MovementZoom * DeltaTime;
 		FirstCamera->SetActorLocation(NewLocation);
-
-		UE_LOG(LogTaC, Log, TEXT("ENTEER"));
 	}
 
 	if (TableBeingEdited == nullptr || CurrentCornerDraggedComponent == nullptr)
@@ -205,5 +209,10 @@ void ATableAndChairsPlayerController::Tick(float DeltaTime)
 	FVector End = ((ForwardVector * EDITING_RAY_LENGTH) + Start);
 	FVector NewCornerWorldLocation = FMath::LinePlaneIntersection(Start, End, CurrentCornerDraggedComponent->GetComponentLocation(), FVector::UpVector);
 
-	TableBeingEdited->SetCornerWorldLocation(CurrentCornerDraggedComponent, NewCornerWorldLocation);
+	bool Result = TableBeingEdited->GetCornerActor()->SetCornerWorldLocation(CurrentCornerDraggedComponent, NewCornerWorldLocation);
+
+	if (Result)
+	{
+		TableBeingEdited->RefreshLocations();
+	}
 }
