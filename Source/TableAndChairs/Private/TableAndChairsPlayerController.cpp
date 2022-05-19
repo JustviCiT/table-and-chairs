@@ -160,19 +160,6 @@ void ATableAndChairsPlayerController::RightClickReleased()
 			}
 
 		}
-		else
-		{
-			
-			if (MainActor->GetClass() == ATableAndChair::StaticClass())
-			{
-				if (!MainActor->IsValidLowLevel()) return;
-				MainActor->ConditionalBeginDestroy();
-				MainActor->Destroy();
-				UE_LOG(LogTaC, Log, TEXT(" Table actor kill "));
-			}
-
-		}
-
 	}
 }
 
@@ -192,8 +179,8 @@ void ATableAndChairsPlayerController::Tick(float DeltaTime)
 		
 		FVector NewLocation = FirstCamera->GetActorLocation();
 		NewLocation += FirstCamera->GetActorRightVector() * (MovementInputLeftUp.X + MovementInputRightDown.X) * DeltaTime;
-		NewLocation += FirstCamera->GetActorUpVector() * (MovementInputLeftUp.Y + MovementInputRightDown.Y) * DeltaTime;
-		NewLocation += FirstCamera->GetActorForwardVector() * MovementZoom * DeltaTime;
+		NewLocation += FirstCamera->GetActorForwardVector() * (MovementInputLeftUp.Y + MovementInputRightDown.Y) * DeltaTime;
+		NewLocation += FirstCamera->GetActorUpVector() * -MovementZoom * DeltaTime;
 		FirstCamera->SetActorLocation(NewLocation);
 	}
 
@@ -209,10 +196,6 @@ void ATableAndChairsPlayerController::Tick(float DeltaTime)
 	FVector End = ((ForwardVector * EDITING_RAY_LENGTH) + Start);
 	FVector NewCornerWorldLocation = FMath::LinePlaneIntersection(Start, End, CurrentCornerDraggedComponent->GetComponentLocation(), FVector::UpVector);
 
-	bool Result = TableBeingEdited->GetCornerActor()->SetCornerWorldLocation(CurrentCornerDraggedComponent, NewCornerWorldLocation);
+	TableBeingEdited->SetCornerWorldLocation(CurrentCornerDraggedComponent, NewCornerWorldLocation);
 
-	if (Result)
-	{
-		TableBeingEdited->RefreshLocations();
-	}
 }

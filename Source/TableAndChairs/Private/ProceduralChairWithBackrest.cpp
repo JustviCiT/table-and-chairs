@@ -47,6 +47,6 @@ AProceduralChair::AProceduralChair()
 	ChairBackrest = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("ChairBackrest"));
 	ChairBackrest->Build(FVector(CHAIR_BACKREST_THICKNESS, CHAIR_SQUARE_SIZE, CHAIR_BACKREST_HEIGHT));
 	ChairBackrest->SetupAttachment(RootComponent);
-	ChairBackrest->SetRelativeLocation(FVector(-tmpChairSquare + CHAIR_BACKREST_THICKNESS/2, 0, CHAIR_LEG_HEIGHT + CHAIR_BACKREST_HEIGHT / 2));
+	ChairBackrest->SetRelativeLocation(FVector(-tmpChairSquare + CHAIR_BACKREST_THICKNESS/2, 0, CHAIR_LEG_HEIGHT + CHAIR_BACKREST_HEIGHT * 0.5f));
 	ChairBackrest->SetBoxMaterial(Material);
 }

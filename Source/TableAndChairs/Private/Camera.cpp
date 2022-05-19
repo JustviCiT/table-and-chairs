@@ -9,6 +9,8 @@ ACamera::ACamera()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("MaaScene"));
+
 	m_armComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraSpringArm"));
 	m_armComponent->SetupAttachment(RootComponent);
 	m_armComponent->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 30.0f), FRotator(-50.0f, 0.0f, 0.0f));

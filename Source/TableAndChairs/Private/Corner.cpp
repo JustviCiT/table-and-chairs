@@ -50,84 +50,19 @@ ACornerActor::ACornerActor()
 
 }
 
-bool ACornerActor::SetCornerWorldLocation(UProceduralMeshComponent * Corner, const FVector NewCornerWorldLocation)
-{
-	if (Corner == nullptr) 
-		return false;
-
-	const FVector OldLocation = Corner->GetComponentLocation();
-	//UE_LOG(LogTaC, Log, TEXT("Old Location %s"), *OldLocation.ToString());
-	const UProceduralMeshComponent* OppositeCorner = GetOppositeCorner(Corner);
-	const FVector OppositeLocation = GetOppositeCorner(Corner)->GetRelativeLocation();
-	//const FVector OldSign = (OldLocation - OppositeCorner->GetRelativeTransform().GetLocation()).GetSignVector();
-	const FVector OldSign = (OldLocation - OppositeLocation).GetSignVector();
-	//UE_LOG(LogTaC, Log, TEXT("Old Sign %s"), *OldSign.ToString());
-	// 
-	//// The current corner location is where the mouse ray hits the table plane
-	Corner->SetWorldLocation(NewCornerWorldLocation);
-
-	//// The nearby corners location depends if they are the clockwise/counterclockwise corners and in which sector of the table they are
-	UProceduralMeshComponent* ClockwiseCorner = GetClockwiseCorner(Corner);
-	////ensureMsgf(ClockwiseCorner != OppositeCorner, TEXT("A clockwise corner can't be the opposite corner"));
-	UProceduralMeshComponent* CounterClockwiseCorner = GetCounterClockwiseCorner(Corner);
-	//ensureMsgf(CounterClockwiseCorner != OppositeCorner, TEXT("A counterclockwise corner can't be the opposite corner"));
-	const FVector NewSign = (Corner->GetRelativeLocation() - OppositeLocation).GetSignVector();
-	UE_LOG(LogTaC, Log, TEXT("New Sign %s"), *NewSign.ToString());
-
-	// HACK: fix this ugly switch
-	// If a corner is in a quadrant in which both coordinates have the same sign it should assign the Y on the clockwise corner and the X on the counterclockwise corner
-	// If a corner is in a quadrant in which both coordinates have a different sign it should assign the X on the clockwise corner and the Y on the counterclockwise corner
-	UProceduralMeshComponent* Corner1;
-	UProceduralMeshComponent* Corner2;
-
-	int CornerIndex = Corners.IndexOfByKey(Corner);
-	if (CornerIndex == INDEX_NONE)
-		return false;
-
-	switch (CornerIndex)
-	{
-	case 0:
-	case 2:
-		Corner1 = ClockwiseCorner;
-		Corner2 = CounterClockwiseCorner;
-		break;
-	case 1:
-	case 3:
-		Corner1 = CounterClockwiseCorner;
-		Corner2 = ClockwiseCorner;
-		break;
-	default:
-		checkNoEntry();
-		return false;
-	}
-	const FVector Corner1OldLoc = Corner1->GetComponentLocation();
-	const FVector Corner2OldLoc = Corner2->GetComponentLocation();
-	Corner1->SetWorldLocation(FVector(Corner1OldLoc.X, NewCornerWorldLocation.Y, Corner1OldLoc.Z));
-	Corner2->SetWorldLocation(FVector(NewCornerWorldLocation.X, Corner2OldLoc.Y, Corner2OldLoc.Z));
-
-	const float DistanceClockwise = FVector::Distance(NewCornerWorldLocation, ClockwiseCorner->GetComponentLocation());
-	const float DistanceCounterClockwise = FVector::Distance(NewCornerWorldLocation, CounterClockwiseCorner->GetComponentLocation());
-
-	//// Minimum table area check
-	//if (DistanceClockwise < ATableAndChair::TABLE_MIN_SIZE ||
-	//	DistanceCounterClockwise < ATableAndChair::TABLE_MIN_SIZE ||
-	//	DistanceClockwise > ATableAndChair::TABLE_MAX_SIZE ||
-	//	DistanceCounterClockwise > ATableAndChair::TABLE_MAX_SIZE ||
-	//	OldSign != NewSign
-	//	)
-	//{
-	//	Corner->SetWorldLocation(OldLocation);
-	//	Corner1->SetWorldLocation(Corner1OldLoc);
-	//	Corner2->SetWorldLocation(Corner2OldLoc);
-	//	return false;
-	//}
-
-	return true;
-}
-
 void ACornerActor::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+FVector ACornerActor::GetOppositeCornerLocation()
+{
+	return OppositeCornerLocation;
+}
+
+FVector ACornerActor::GetSelectedCornerSign()
+{
+	return SelectedCornerSign;
 }
 
 TArray<UProceduralBoxComponent*> ACornerActor::GetCorners() const
@@ -151,6 +86,8 @@ void ACornerActor::SetCornerSelected(const UProceduralMeshComponent* CurrentCorn
 		return;
 	}
 
+	OppositeCornerLocation = GetOppositeCorner(CurrentCorner)->GetComponentLocation();
+	SelectedCornerSign = (CurrentCorner->GetComponentLocation() - OppositeCornerLocation).GetSignVector();
 	Corners[index]->SetBoxMaterial(CornerMaterialSelected);
 }
 
@@ -162,6 +99,8 @@ void ACornerActor::SetCornerEnabled(const UProceduralMeshComponent* CurrentCorne
 		return;
 	}
 
+	OppositeCornerLocation = FVector(0.0f, 0.0f, 0.0f);
+	SelectedCornerSign = FVector(0.0f, 0.0f, 0.0f);
 	Corners[index]->SetBoxMaterial(CornerMaterialEnabled);
 }
 
@@ -179,20 +118,23 @@ int ACornerActor::Num() const
 	return Corners.Num();
 }
 
-UProceduralMeshComponent* ACornerActor::GetClockwiseCorner(const UProceduralMeshComponent* CurrentCorner) const
+UProceduralMeshComponent* ACornerActor::GetFixedXCorner(const UProceduralMeshComponent* CurrentCorner) const
 {
 	int index = Corners.IndexOfByKey(CurrentCorner);
 	if (index == INDEX_NONE)
 		return nullptr;
 
-	return Corners[(index+1) % 4];
+	if ((index % 2) == 0)
+		return Corners[(index + 1) % 4];
+	else
+		return Corners[(index - 1) % 4];
 }
 
-UProceduralMeshComponent* ACornerActor::GetCounterClockwiseCorner(const UProceduralMeshComponent* CurrentCorner) const
+UProceduralMeshComponent* ACornerActor::GetFixedYCorner(const UProceduralMeshComponent* CurrentCorner) const
 {
 	int index = Corners.IndexOfByKey(CurrentCorner);
-	if (index == INDEX_NONE)
+	if (index == INDEX_NONE || index > 3)
 		return nullptr;
 
-	return Corners[(index+3) % 4];
+	return Corners[3 - index];
 }

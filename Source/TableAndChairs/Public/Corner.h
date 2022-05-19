@@ -21,11 +21,18 @@ public:
 
 private:
 
+	UPROPERTY()
+	FVector OppositeCornerLocation = FVector();
+
+	UPROPERTY()
+	FVector SelectedCornerSign = FVector();
+
 	/**
 	The four table corners in clockwise order from the positive coordinates relative sector
 	*/
 	UPROPERTY()
 	TArray<UProceduralBoxComponent*> Corners;
+
 
 protected:
 
@@ -34,8 +41,11 @@ protected:
 
 public:
 
-	UFUNCTION(BlueprintCallable, Category = "TaC")
-	bool SetCornerWorldLocation(UProceduralMeshComponent * Corner, const FVector NewWorldLocation);
+	UFUNCTION()
+	FVector GetOppositeCornerLocation();
+
+	UFUNCTION()
+	FVector GetSelectedCornerSign();
 
 	/**
 	Returns the opposite corner given a corner
@@ -79,7 +89,7 @@ public:
 	@Return clockwise corner or null if CurrentCorner is not a table corner or is null
 	*/
 	UFUNCTION(BlueprintPure, Category = "TaC")
-	UProceduralMeshComponent* GetClockwiseCorner(const UProceduralMeshComponent* CurrentCorner) const;
+	UProceduralMeshComponent* GetFixedXCorner(const UProceduralMeshComponent* CurrentCorner) const;
 
 	/**
 	Returns the counterclockwise corner given a corner
@@ -88,7 +98,7 @@ public:
 	@Return counterclockwise corner or null if CurrentCorner is not a table corner or is null
 	*/
 	UFUNCTION(BlueprintPure, Category = "TaC")
-	UProceduralMeshComponent* GetCounterClockwiseCorner(const UProceduralMeshComponent* CurrentCorner) const;
+	UProceduralMeshComponent* GetFixedYCorner(const UProceduralMeshComponent* CurrentCorner) const;
 
 	/**
 	The material applied to the corner when it's not selected, set in the constructor, read only

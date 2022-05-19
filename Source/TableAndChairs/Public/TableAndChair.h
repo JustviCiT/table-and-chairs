@@ -56,12 +56,19 @@ private:
 	UFUNCTION()
 	void SpawnChairs(int HowMany, TArray<FChairCuple>& Container);
 
+	UFUNCTION()
+	int NumChairsToSpawn(int HowMany, TArray<FChairCuple>& Container);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
 	UFUNCTION()
 	ACornerActor* GetCornerActor();
+
+	UFUNCTION(BlueprintCallable, Category = "TaC")
+	bool SetCornerWorldLocation(UProceduralMeshComponent* Corner, const FVector NewWorldLocation);
+
 
 	/**
 	Call this after editing one of the 4 corners locations to refresh vertexes locations
