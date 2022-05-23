@@ -11,7 +11,6 @@ const float		AProceduralTable::DEFAULT_TABLE_HEIGHT = AProceduralTable::LEG_LENG
 
 AProceduralTable::AProceduralTable()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
@@ -21,7 +20,6 @@ AProceduralTable::AProceduralTable()
 	if (Material.Succeeded())
 	{
 		TableMaterial = Material.Object;
-		UE_LOG(LogTaC, Log, TEXT("Table material loaded"));
 	}
 	else
 	{
@@ -80,8 +78,6 @@ void AProceduralTable::UpdateLegsLocation()
 void AProceduralTable::BeginPlay()
 {
 	Super::BeginPlay();
-
-
 }
 
 FVector2D AProceduralTable::GetTableSize() const
@@ -106,6 +102,6 @@ float AProceduralTable::GetTableHeight() const
 
 void AProceduralTable::UpdateTableWorldLocation(FVector& NewWorldLocation)
 {
-	CounterTop->SetWorldLocation(NewWorldLocation ); //+  GetActorLocation()
+	CounterTop->SetWorldLocation(NewWorldLocation );
 }
 

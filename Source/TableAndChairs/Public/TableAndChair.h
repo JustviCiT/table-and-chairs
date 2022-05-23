@@ -56,6 +56,9 @@ private:
 	UPROPERTY()
 	AProceduralTable* Table;
 
+	/*
+	Contains all 4 corners of the table
+	*/
 	UPROPERTY()
 	ACornerActor* Corners;
 

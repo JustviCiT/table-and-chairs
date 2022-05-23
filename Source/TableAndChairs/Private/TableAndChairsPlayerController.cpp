@@ -27,9 +27,8 @@ bool ATableAndChairsPlayerController::TableIsOverlapping(FVector& SpawnPoint)
 	UClass* seekClass = nullptr; // = ATableAndChair::StaticClass(); // NULL;
 	UKismetSystemLibrary::BoxOverlapActors(GetWorld(), SpawnPoint, BoxExtent, traceObjectTypes, seekClass, ignoreActors, outActors);
 
-	DrawDebugBox(GetWorld(), SpawnPoint, BoxExtent, FColor::Purple, true, -1, 0, 2);
+	//DrawDebugBox(GetWorld(), SpawnPoint, BoxExtent, FColor::Purple, true, -1, 0, 2);
 
-	// Finally iterate over the outActor array
 	//for (AActor* overlappedActor : outActors) {
 	//	UE_LOG(LogTemp, Log, TEXT("OverlappedActor: %s"), *overlappedActor->GetName());
 	//}
@@ -102,7 +101,7 @@ void ATableAndChairsPlayerController::MoveLeft(float AxisValue)
 
 void ATableAndChairsPlayerController::LeftClickPressed()
 {
-	UE_LOG(LogTaC, Log, TEXT("Left Click Pressed"));
+	//UE_LOG(LogTaC, Log, TEXT("Left Click Pressed"));
 
 	FVector Start;
 	FVector ForwardVector;
@@ -141,7 +140,7 @@ void ATableAndChairsPlayerController::LeftClickPressed()
 			if (!TableIsOverlapping(OutHit.ImpactPoint))
 			{
 				FActorSpawnParameters SpawnParameters;
-				SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+				SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 				GetWorld()->SpawnActor<ATableAndChair>(ATableAndChair::StaticClass(), OutHit.ImpactPoint, FRotator::ZeroRotator, SpawnParameters);
 			}
 
@@ -152,7 +151,7 @@ void ATableAndChairsPlayerController::LeftClickPressed()
 
 void ATableAndChairsPlayerController::LeftClickReleased()
 {
-	UE_LOG(LogTaC, Log, TEXT("Left Click released"));
+	//UE_LOG(LogTaC, Log, TEXT("Left Click released"));
 
 	if (TableBeingEdited == nullptr || CurrentCornerDraggedComponent == nullptr) 
 	{
@@ -167,7 +166,7 @@ void ATableAndChairsPlayerController::LeftClickReleased()
 
 void ATableAndChairsPlayerController::RightClickReleased()
 {
-	UE_LOG(LogTaC, Log, TEXT("Right Click Released"));
+	//UE_LOG(LogTaC, Log, TEXT("Right Click Released"));
 
 	FVector Start;
 	FVector ForwardVector;

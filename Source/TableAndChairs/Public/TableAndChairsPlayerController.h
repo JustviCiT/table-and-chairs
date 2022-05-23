@@ -62,6 +62,9 @@ protected:
 	*/
 	float MovementZoom;
 
+	/*
+	Reference to the camera pawn
+	*/
 	UPROPERTY()
 	ACamera* FirstCamera;
 

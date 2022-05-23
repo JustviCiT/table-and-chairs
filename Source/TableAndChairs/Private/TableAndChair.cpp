@@ -24,7 +24,7 @@ ATableAndChair::ATableAndChair()
 void ATableAndChair::SpawnChairs(int HowMany, TArray<FChairCuple>& Container)
 {
 	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	for (int y = 0; y < HowMany; ++y)
 	{
@@ -76,7 +76,7 @@ void ATableAndChair::BeginPlay()
 	Super::BeginPlay();
 
 	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	Table = GetWorld()->SpawnActor<AProceduralTable>(AProceduralTable::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
 	Table->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
@@ -198,11 +198,12 @@ void ATableAndChair::RefreshLocations()
 
 	FVector ChairsLeftSpawnPoint = ChairsForwardSpawnPoint;
 	FVector ChairsRightSpawnPoint = Corners->GetCorner(1)->GetComponentLocation();
+	float HalfChairSquareSize = AProceduralChair::CHAIR_SQUARE_SIZE * 0.5f;
 
 	// Cache table size
 	FVector2D TmpTableSize = FVector2D(
-		FVector::Distance(Corners->GetCorner(0)->GetComponentLocation(), Corners->GetCorner(1)->GetComponentLocation()),
-		FVector::Distance(Corners->GetCorner(0)->GetComponentLocation(), Corners->GetCorner(3)->GetComponentLocation())
+		FVector::Distance(Corners->GetCorner(0)->GetComponentLocation(), ChairsRightSpawnPoint),
+		FVector::Distance(Corners->GetCorner(0)->GetComponentLocation(), ChairsBackwardSpawnPoint)
 	);
 
 	FVector NewRelativeRoot = FVector(
@@ -223,16 +224,16 @@ void ATableAndChair::RefreshLocations()
 	SpawnChairs(ChairsToSpawnOnYSide, FrontBackChairs);
 
 
-	const float CHAIRS_YLINE_LENGTH = FrontBackChairs.Num() * AProceduralChair::CHAIR_SQUARE_SIZE + (FrontBackChairs.Num() - 1) * DISTANCE_BETWEEN_CHAIRS;
+	const float CHAIRS_YLINE_LENGTH = CHAIRS_INTERVAL * FrontBackChairs.Num() - DISTANCE_BETWEEN_CHAIRS;
 	const float YChairsSpawnOffset = (Table->GetTableSize().Y - CHAIRS_YLINE_LENGTH) * 0.5f;
 
 
 	ChairsForwardSpawnPoint.X -= CHAIRS_DISTANCE_FROM_TABLE;
-	ChairsForwardSpawnPoint.Y += AProceduralChair::CHAIR_SQUARE_SIZE * 0.5f;
+	ChairsForwardSpawnPoint.Y += HalfChairSquareSize;
 
 	
 	ChairsBackwardSpawnPoint.X += CHAIRS_DISTANCE_FROM_TABLE;
-	ChairsBackwardSpawnPoint.Y += AProceduralChair::CHAIR_SQUARE_SIZE * 0.5f;
+	ChairsBackwardSpawnPoint.Y += HalfChairSquareSize;
 
 	// Update chairs location
 	for (int y = 0; y < FrontBackChairs.Num(); ++y)
@@ -245,14 +246,14 @@ void ATableAndChair::RefreshLocations()
 	//  Spawn chairs left right
 	SpawnChairs(ChairsToSpawnOnXSide, LeftRightChairs);
 
-	const float CHAIRS_XLINE_LENGTH = LeftRightChairs.Num() * AProceduralChair::CHAIR_SQUARE_SIZE + (LeftRightChairs.Num() - 1) * DISTANCE_BETWEEN_CHAIRS;
+	const float CHAIRS_XLINE_LENGTH = CHAIRS_INTERVAL * LeftRightChairs.Num() - DISTANCE_BETWEEN_CHAIRS;
 	const float XChairsSpawnOffset = (Table->GetTableSize().X - CHAIRS_XLINE_LENGTH) * 0.5f;
 
 	ChairsLeftSpawnPoint.Y -= CHAIRS_DISTANCE_FROM_TABLE;
-	ChairsLeftSpawnPoint.X += AProceduralChair::CHAIR_SQUARE_SIZE * 0.5f;
+	ChairsLeftSpawnPoint.X += HalfChairSquareSize;
 	
 	ChairsRightSpawnPoint.Y += CHAIRS_DISTANCE_FROM_TABLE;
-	ChairsRightSpawnPoint.X += AProceduralChair::CHAIR_SQUARE_SIZE * 0.5f;
+	ChairsRightSpawnPoint.X += HalfChairSquareSize;
 
 	// Update chairs location
 	for (int x = 0; x < LeftRightChairs.Num(); ++x)

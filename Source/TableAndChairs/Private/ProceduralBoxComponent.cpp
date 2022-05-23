@@ -41,10 +41,10 @@ void UProceduralBoxComponent::Build(const FVector Size, const TArray<FLinearColo
 
 	// Bottom
 	vertices = {
-	{-tmpX, -tmpY, -tmpZ },
-	{-tmpX,  tmpY, -tmpZ },
-	{ tmpX, -tmpY, -tmpZ },
-	{ tmpX,  tmpY, -tmpZ }
+		{-tmpX, -tmpY, -tmpZ },
+		{-tmpX,  tmpY, -tmpZ },
+		{ tmpX, -tmpY, -tmpZ },
+		{ tmpX,  tmpY, -tmpZ }
 	};
 
 
@@ -54,10 +54,10 @@ void UProceduralBoxComponent::Build(const FVector Size, const TArray<FLinearColo
 
 	// Backward
 	vertices = {
-	{-tmpX, -tmpY,  tmpZ },
-	{-tmpX,  tmpY,  tmpZ },
-	{-tmpX, -tmpY, -tmpZ },
-	{-tmpX,  tmpY, -tmpZ }
+		{-tmpX, -tmpY,  tmpZ },
+		{-tmpX,  tmpY,  tmpZ },
+		{-tmpX, -tmpY, -tmpZ },
+		{-tmpX,  tmpY, -tmpZ }
 	};
 	triangles = { 0, 2, 1, 1, 2, 3 };
 	normals = { -FVector::ForwardVector , -FVector::ForwardVector, -FVector::ForwardVector , -FVector::ForwardVector };
@@ -65,10 +65,10 @@ void UProceduralBoxComponent::Build(const FVector Size, const TArray<FLinearColo
 
 	// Forward
 	vertices = {
-	{tmpX, -tmpY,  tmpZ },
-	{tmpX,  tmpY,  tmpZ },
-	{tmpX, -tmpY, -tmpZ },
-	{tmpX,  tmpY, -tmpZ }
+		{tmpX, -tmpY,  tmpZ },
+		{tmpX,  tmpY,  tmpZ },
+		{tmpX, -tmpY, -tmpZ },
+		{tmpX,  tmpY, -tmpZ }
 	};
 	triangles = { 2, 0, 1, 1, 3, 2 };
 	normals = { FVector::ForwardVector , FVector::ForwardVector, FVector::ForwardVector , FVector::ForwardVector };
@@ -76,10 +76,10 @@ void UProceduralBoxComponent::Build(const FVector Size, const TArray<FLinearColo
 
 	// Left
 	vertices = {
-	{ tmpX, -tmpY,  tmpZ },
-	{-tmpX, -tmpY,  tmpZ },
-	{ tmpX, -tmpY, -tmpZ },
-	{-tmpX, -tmpY, -tmpZ }
+		{ tmpX, -tmpY,  tmpZ },
+		{-tmpX, -tmpY,  tmpZ },
+		{ tmpX, -tmpY, -tmpZ },
+		{-tmpX, -tmpY, -tmpZ }
 	};
 	triangles = { 0, 2, 1, 1, 2, 3 };
 	normals = { -FVector::RightVector, -FVector::RightVector, -FVector::RightVector , -FVector::RightVector };
@@ -87,10 +87,10 @@ void UProceduralBoxComponent::Build(const FVector Size, const TArray<FLinearColo
 
 	// Right
 	vertices = {
-	{ tmpX, tmpY,  tmpZ },
-	{-tmpX, tmpY,  tmpZ },
-	{ tmpX, tmpY, -tmpZ },
-	{-tmpX, tmpY, -tmpZ }
+		{ tmpX, tmpY,  tmpZ },
+		{-tmpX, tmpY,  tmpZ },
+		{ tmpX, tmpY, -tmpZ },
+		{-tmpX, tmpY, -tmpZ }
 	};
 	triangles = { 0, 1, 2, 1, 3, 2 };
 	normals = { FVector::RightVector, FVector::RightVector, FVector::RightVector , FVector::RightVector };
