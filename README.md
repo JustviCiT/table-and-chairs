@@ -4,6 +4,7 @@ Template used: C++ Archviz procedural geometry demo in Unreal Engine 4
 
 ## Controls
 
+- Left click somewhere on the floor spawn table and chairs
 - Left click on corner, resize table
 - Right click on table or chairs, remove 
 
@@ -16,6 +17,7 @@ Template used: C++ Archviz procedural geometry demo in Unreal Engine 4
 
 ## Changelog
 
+- Fixed Spawn collision between tables 
 - Fixed editing of corners when not in center
 - Fixed table overflow in the opposite direction
 - Added Camera Pawn that can move with wasd + mouse control
