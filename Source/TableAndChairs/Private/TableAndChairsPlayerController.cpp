@@ -8,6 +8,39 @@ void ATableAndChairsPlayerController::ExitGame()
 	FGenericPlatformMisc::RequestExit(false);
 }
 
+bool ATableAndChairsPlayerController::TableIsOverlapping(FVector& SpawnPoint)
+{
+	// Set what actors to seek out from it's collision channel
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
+
+	// Ignore any specific actors
+	TArray<AActor*> ignoreActors;
+
+	// Array of actors that are inside the box
+	TArray<AActor*> outActors;
+
+	// Box's spawn loccation within the world
+	FVector2D TableAndChairsExtent = AProceduralTable::DEFAULT_TABLE_SIZE * 0.5f + ATableAndChair::CHAIRS_DISTANCE_FROM_TABLE + AProceduralChair::CHAIR_SQUARE_SIZE;
+	FVector BoxExtent(TableAndChairsExtent, AProceduralTable::DEFAULT_TABLE_HEIGHT);
+
+	UClass* seekClass = nullptr; // = ATableAndChair::StaticClass(); // NULL;
+	UKismetSystemLibrary::BoxOverlapActors(GetWorld(), SpawnPoint, BoxExtent, traceObjectTypes, seekClass, ignoreActors, outActors);
+
+	DrawDebugBox(GetWorld(), SpawnPoint, BoxExtent, FColor::Purple, true, -1, 0, 2);
+
+	// Finally iterate over the outActor array
+	//for (AActor* overlappedActor : outActors) {
+	//	UE_LOG(LogTemp, Log, TEXT("OverlappedActor: %s"), *overlappedActor->GetName());
+	//}
+	if (outActors.Num() > 0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void ATableAndChairsPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -105,9 +138,13 @@ void ATableAndChairsPlayerController::LeftClickPressed()
 		}
 		else
 		{
-			FActorSpawnParameters SpawnParameters;
-			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
-			GetWorld()->SpawnActor<ATableAndChair>(ATableAndChair::StaticClass(), OutHit.ImpactPoint, FRotator::ZeroRotator, SpawnParameters);
+			if (!TableIsOverlapping(OutHit.ImpactPoint))
+			{
+				FActorSpawnParameters SpawnParameters;
+				SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+				GetWorld()->SpawnActor<ATableAndChair>(ATableAndChair::StaticClass(), OutHit.ImpactPoint, FRotator::ZeroRotator, SpawnParameters);
+			}
+
 		}
 
 	}

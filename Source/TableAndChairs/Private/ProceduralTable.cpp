@@ -5,9 +5,9 @@
 
 const float		AProceduralTable::LEG_LENGTH = 65;
 const float		AProceduralTable::LEG_SIDE_SIZE = 10;
-const bool		AProceduralTable::SHOULD_HAVE_COLLISION = false;
 const float		AProceduralTable::TABLE_TOP_THICKNESS = 10.0f;
-const FVector2D AProceduralTable::DEFAULT_SIZE = FVector2D(200, 200);
+const FVector2D AProceduralTable::DEFAULT_TABLE_SIZE = FVector2D(200, 200);
+const float		AProceduralTable::DEFAULT_TABLE_HEIGHT = AProceduralTable::LEG_LENGTH + AProceduralTable::TABLE_TOP_THICKNESS;
 
 AProceduralTable::AProceduralTable()
 {
@@ -32,9 +32,9 @@ AProceduralTable::AProceduralTable()
 	CounterTop = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("Countertop"));
 	CounterTop->SetupAttachment(RootComponent);
 	CounterTop->Build(FVector(TableSize, TABLE_TOP_THICKNESS),true);
-	//CounterTop->SetRelativeLocation(FVector(GetActorLocation().X, GetActorLocation().Y, GetTableHeight()));
 	CounterTop->SetBoxMaterial(TableMaterial);
-
+	CounterTop->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	CounterTop->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	// Create legs
 	LegsOffsets = {
@@ -50,6 +50,8 @@ AProceduralTable::AProceduralTable()
 		auto LegComp = CreateDefaultSubobject<UProceduralBoxComponent>(*LegName);
 		LegComp->Build(FVector(LEG_SIDE_SIZE, LEG_SIDE_SIZE, LEG_LENGTH));
 		LegComp->SetupAttachment(CounterTop);
+		LegComp->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+		LegComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Legs.Add(LegComp);
 	}
 

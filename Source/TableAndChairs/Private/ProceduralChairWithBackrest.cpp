@@ -34,19 +34,27 @@ AProceduralChair::AProceduralChair()
 		LegComp->SetupAttachment(RootComponent);
 		LegComp->SetRelativeLocation(LegsCorners[i]);
 		LegComp->SetBoxMaterial(Material);
+		LegComp->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+		LegComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+		ChairLegs.Add(LegComp);
 	}
 
 	// Spawn the chair square
 	ChairSquare = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("ChairSquare"));
 	ChairSquare->Build(FVector(CHAIR_SQUARE_SIZE, CHAIR_SQUARE_SIZE, CHAIR_SQUARE_THICKNESS));
 	ChairSquare->SetupAttachment(RootComponent);
-	ChairSquare->SetRelativeLocation(FVector(0,0, CHAIR_LEG_HEIGHT+ CHAIR_SQUARE_THICKNESS/2));
+	ChairSquare->SetRelativeLocation(FVector(0,0, CHAIR_LEG_HEIGHT+ CHAIR_SQUARE_THICKNESS *0.5f));
+	ChairSquare->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	ChairSquare->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	ChairSquare->SetBoxMaterial(Material);
 
 	// Spawn the chair backrest
 	ChairBackrest = CreateDefaultSubobject<UProceduralBoxComponent>(TEXT("ChairBackrest"));
 	ChairBackrest->Build(FVector(CHAIR_BACKREST_THICKNESS, CHAIR_SQUARE_SIZE, CHAIR_BACKREST_HEIGHT));
 	ChairBackrest->SetupAttachment(RootComponent);
-	ChairBackrest->SetRelativeLocation(FVector(-tmpChairSquare + CHAIR_BACKREST_THICKNESS/2, 0, CHAIR_LEG_HEIGHT + CHAIR_BACKREST_HEIGHT * 0.5f));
+	ChairBackrest->SetRelativeLocation(FVector(-tmpChairSquare + CHAIR_BACKREST_THICKNESS * 0.5f, 0, CHAIR_LEG_HEIGHT + CHAIR_BACKREST_HEIGHT * 0.5f));
+	ChairBackrest->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	ChairBackrest->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	ChairBackrest->SetBoxMaterial(Material);
 }

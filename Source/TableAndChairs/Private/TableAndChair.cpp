@@ -16,21 +16,25 @@ ATableAndChair::ATableAndChair()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
+
 	this->SetRootComponent(RootComponent);
 }
 
 
 void ATableAndChair::SpawnChairs(int HowMany, TArray<FChairCuple>& Container)
 {
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+
 	for (int y = 0; y < HowMany; ++y)
 	{
 		AProceduralChair* Chair = GetWorld()->SpawnActor<AProceduralChair>(AProceduralChair::StaticClass(),
 			FVector::ZeroVector,
-			FRotator::ZeroRotator);
+			FRotator::ZeroRotator, SpawnParameters);
 
 		AProceduralChair* MirroredChair = GetWorld()->SpawnActor<AProceduralChair>(AProceduralChair::StaticClass(),
 			FVector::ZeroVector,
-			FRotator::ZeroRotator);
+			FRotator::ZeroRotator, SpawnParameters);
 
 		Chair->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 		MirroredChair->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
@@ -71,10 +75,13 @@ void ATableAndChair::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Table = GetWorld()->SpawnActor<AProceduralTable>(AProceduralTable::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator);
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+
+	Table = GetWorld()->SpawnActor<AProceduralTable>(AProceduralTable::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
 	Table->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 	
-	Corners = GetWorld()->SpawnActor<ACornerActor>(ACornerActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator);
+	Corners = GetWorld()->SpawnActor<ACornerActor>(ACornerActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
 	Corners->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 
 	Corners->GetCorner(0)->SetRelativeLocation(FVector( Table->GetTableSize().X * 0.5f,  
@@ -92,6 +99,8 @@ void ATableAndChair::BeginPlay()
 	Corners->GetCorner(3)->SetRelativeLocation(FVector( Table->GetTableSize().X * 0.5f, 
 		-Table->GetTableSize().Y * 0.5f,
 		Table->GetTableHeight() + ACornerActor::ANCHOR_HOVER_DISTANCE));
+
+	//DrawDebugBox(GetWorld(), OverlapBox->GetComponentLocation(), FVector(Table->GetTableSize(), Table->GetTableHeight()), FColor::Purple, true, -1, 0, 10);
 
 	RefreshLocations();
 	
@@ -181,8 +190,6 @@ bool ATableAndChair::SetCornerWorldLocation(UProceduralMeshComponent* Corner, co
 
 	return true;
 }
-
-
 
 void ATableAndChair::RefreshLocations()
 {

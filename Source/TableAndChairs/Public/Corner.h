@@ -7,6 +7,10 @@
 #include "LogTaC.h"
 #include "Corner.generated.h"
 
+
+/*
+Class that builds 4 corners
+*/
 UCLASS(Blueprintable)
 class TABLEANDCHAIRS_API ACornerActor : public AActor
 {
@@ -41,9 +45,9 @@ protected:
 
 public:
 
-	UFUNCTION()
-	FVector GetOppositeCornerLocation();
-
+	/*
+	Returns the cached version of SelectedCornerSign
+	*/
 	UFUNCTION()
 	FVector GetSelectedCornerSign();
 
@@ -55,9 +59,13 @@ public:
 	*/
 	UFUNCTION(BlueprintPure, Category = "TaC")
 	UProceduralMeshComponent * GetOppositeCorner(const UProceduralMeshComponent* CurrentCorner) const;
+	/**
+	Returns the opposite corner location
 
-	UFUNCTION(BlueprintPure, Category = "TaC")
-	int Num() const;
+	@Return OppositeCornerLocation 
+	*/
+	UFUNCTION()
+	FVector GetOppositeCornerLocation();
 
 	/**
 	Returns the four anchor corners of the table
@@ -68,40 +76,49 @@ public:
 	UFUNCTION(BlueprintPure, Category = "TaC")
 	TArray<UProceduralBoxComponent*> GetCorners() const;
 
+
+	/**
+	Returns one corner given one
+
+	@param Index
+	*/
 	UFUNCTION(BlueprintPure, Category = "TaC")
 	UProceduralBoxComponent* GetCorner(int Index) const;
 
 	/**
-	* Changes the texture of a single corner from selected to enabled
+	* Changes the texture of a single corner to selected
 	* @Param CurrentCorner input corner
 	*/
 	UFUNCTION(BlueprintCallable, Category = "TaC")
 	void SetCornerSelected(const UProceduralMeshComponent* CurrentCorner);
 
-
+	/**
+	* Changes the texture of a single corner to enabled
+	* @Param CurrentCorner input corner
+	*/
 	UFUNCTION(BlueprintCallable, Category = "TaC")
 	void SetCornerEnabled(const UProceduralMeshComponent* CurrentCorner);
 
 	/**
-	Returns the clockwise corner given a corner
+	Returns the corner that will have a fixed X
 
 	@Param CurrentCorner the input corner
-	@Return clockwise corner or null if CurrentCorner is not a table corner or is null
+	@Return X corner or null if CurrentCorner is not a table corner or is null
 	*/
 	UFUNCTION(BlueprintPure, Category = "TaC")
 	UProceduralMeshComponent* GetFixedXCorner(const UProceduralMeshComponent* CurrentCorner) const;
 
 	/**
-	Returns the counterclockwise corner given a corner
+	Returns the corner that will have a fixed Y
 
 	@Param CurrentCorner the input corner
-	@Return counterclockwise corner or null if CurrentCorner is not a table corner or is null
+	@Return Y corner or null if CurrentCorner is not a table corner or is null
 	*/
 	UFUNCTION(BlueprintPure, Category = "TaC")
 	UProceduralMeshComponent* GetFixedYCorner(const UProceduralMeshComponent* CurrentCorner) const;
 
 	/**
-	The material applied to the corner when it's not selected, set in the constructor, read only
+	The material applied to the corner when it's not enabled, set in the constructor, read only
 	*/
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "TaC")
 	UMaterial* CornerMaterialEnabled;

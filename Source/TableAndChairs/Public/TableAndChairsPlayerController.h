@@ -7,6 +7,7 @@
 #include "LogTaC.h"
 #include "Camera/CameraActor.h"
 #include "Camera.h"
+#include "Kismet\KismetSystemLibrary.h"
 #include "TableAndChairsPlayerController.generated.h"
 
 /**
@@ -20,21 +21,45 @@ class TABLEANDCHAIRS_API ATableAndChairsPlayerController : public APlayerControl
 
 private:
 
-	// This is the table currently being edited by the user
+	/*
+	This is the table currently being edited
+	*/
 	UPROPERTY()
 	ATableAndChair* TableBeingEdited;
 
-	// This is the corner of the table currently being edited
+	/*
+	This is the corner of the table currently being edited
+	*/
 	UPROPERTY()
 	UProceduralMeshComponent* CurrentCornerDraggedComponent;
+
+	/*
+	@return True on Table overlapping on anything 
+	*/
+	UFUNCTION()
+	bool TableIsOverlapping(FVector& SpawnPoint);
 
 protected:
 	virtual void BeginPlay() override; 
 
 	virtual void SetupInputComponent() override;
 
+	/*
+	* Contains values used for camera movement
+		X axis is Right, Y is Down 
+	*/
 	FVector2D MovementInputRightDown;
+
+	/*
+	* Contains values used for camera movement
+		X axis is Left, Y is Up
+	*/
 	FVector2D MovementInputLeftUp;
+
+	/*
+	* Contains value used for camera movement
+		+1 , -1 for ZoomIn/ZoomOut
+	*/
 	float MovementZoom;
 
 	UPROPERTY()
@@ -69,7 +94,9 @@ protected:
 
 
 public:
-	// The length of the ray to find an editable table
+	/*
+	The length of the ray to find an editable table
+	*/
 	static const float EDITING_RAY_LENGTH;
 
 	virtual void Tick(float DeltaTime) override;

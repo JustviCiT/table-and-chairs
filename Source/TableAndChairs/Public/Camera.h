@@ -8,13 +8,16 @@
 #include "Camera/CameraComponent.h"
 #include "Camera.generated.h"
 
+
+/*
+Camera pawn that is moved throught TableAndChairsPlayerController
+*/
 UCLASS()
 class TABLEANDCHAIRS_API ACamera : public APawn
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this pawn's properties
 	ACamera();
 
 	UPROPERTY()

@@ -6,6 +6,10 @@
 #include "ProceduralChairWithBackrest.h"
 #include "ChairPair.generated.h"
 
+
+/*
+* Contains both chairs that have the same location with a different rotation
+*/
 USTRUCT()
 struct FChairCuple
 {

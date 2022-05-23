@@ -7,6 +7,10 @@
 #include "LogTaC.h"
 #include "ProceduralChairWithBackrest.generated.h"
 
+
+/*
+Generates chairs with it's legs and backrest
+*/
 UCLASS(Blueprintable)
 class TABLEANDCHAIRS_API AProceduralChair : public AActor
 {
@@ -25,6 +29,11 @@ private:
 	UPROPERTY()
 	UProceduralBoxComponent* ChairBackrest;
 
+	/*
+	List of the 4 procedural legs of the chair
+	*/
+	TArray<UProceduralBoxComponent*> ChairLegs;
+
 public:	
 	AProceduralChair();
 
@@ -37,7 +46,9 @@ public:
 	static const float CHAIR_BACKREST_HEIGHT;
 	static const float CHAIR_BACKREST_THICKNESS;
 
-public:	
+	/*
+	Material applied to the chair
+	*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "TaC")
 	UMaterial* Material;
 };

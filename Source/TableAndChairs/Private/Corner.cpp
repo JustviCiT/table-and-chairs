@@ -113,11 +113,6 @@ UProceduralMeshComponent * ACornerActor::GetOppositeCorner(const UProceduralMesh
 	return Corners[(index+2) % 4];
 }
 
-int ACornerActor::Num() const
-{
-	return Corners.Num();
-}
-
 UProceduralMeshComponent* ACornerActor::GetFixedXCorner(const UProceduralMeshComponent* CurrentCorner) const
 {
 	int index = Corners.IndexOfByKey(CurrentCorner);
